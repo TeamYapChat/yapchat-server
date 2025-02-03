@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/teamyapchat/yapchat-server/internal/database"
-	log "github.com/teamyapchat/yapchat-server/internal/logging"
 )
 
 func init() {
@@ -24,7 +23,7 @@ func init() {
 
 	_, err := database.Connect(dsn)
 	if err != nil {
-		log.Error.Fatalln("Error while connecting to database:", err)
+		panic(err)
 	}
 }
 
