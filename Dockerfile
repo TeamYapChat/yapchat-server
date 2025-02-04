@@ -10,5 +10,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/server/main.go
 FROM alpine:edge
 WORKDIR /app
 COPY --from=build /app/server .
+COPY web ./web
 EXPOSE 8080
 ENTRYPOINT ["/app/server"]
