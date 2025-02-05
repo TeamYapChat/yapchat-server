@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	"os"
-
-	"github.com/gin-gonic/gin"
 
 	"github.com/teamyapchat/yapchat-server/internal/database"
 	log "github.com/teamyapchat/yapchat-server/internal/logging"
@@ -34,27 +31,16 @@ func init() {
 }
 
 func main() {
-	// DEBUG
-	log.Debug.Println(GetOutboundIP())
+	fs := http.FileServer(http.Dir("./dist"))
 
-	r := gin.Default()
-	r.LoadHTMLFiles("web/home.html")
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, err := os.Stat("./dist" + r.URL.Path)
+		if os.IsNotExist(err) {
+			r.URL.Path = "/"
+		}
 
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "home.html", gin.H{})
+		fs.ServeHTTP(w, r)
 	})
 
-	r.Run("0.0.0.0:8080")
-}
-
-func GetOutboundIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Error.Fatal(err)
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP
+	http.ListenAndServe(":8081", nil)
 }
