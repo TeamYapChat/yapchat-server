@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/teamyapchat/yapchat-server/internal/auth"
 	"github.com/teamyapchat/yapchat-server/internal/database"
+	"github.com/teamyapchat/yapchat-server/internal/handlers"
 	log "github.com/teamyapchat/yapchat-server/internal/logging"
 )
 
@@ -24,11 +27,15 @@ func init() {
 		dbName,
 	)
 
-	_, err := database.Connect(dsn)
-	if err != nil {
-		panic(err)
+	if err := database.Connect(dsn); err != nil {
+		log.Error.Fatalln("Failed to connect to database:", err)
 	}
-	log.Info.Println("Successfully connected to database")
+	log.Info.Println("Successfully connected to database.")
+
+	if err := database.Migrate(); err != nil {
+		log.Error.Fatalln("Failed to migrate database:", err)
+	}
+	log.Info.Println("Successfully migrated database.")
 }
 
 func main() {
@@ -36,9 +43,40 @@ func main() {
 
 	r.Static("/", "./dist")
 
+	r.POST("/login", handlers.Login)
+	api := r.Group("/api")
+	api.Use(AuthMiddleware())
+	{
+		api.GET("/protected", func(c *gin.Context) {
+			username, _ := c.Get("username")
+			c.JSON(http.StatusOK, gin.H{"message": "Welcome!", "user": username})
+		})
+	}
+
 	r.NoRoute(func(c *gin.Context) {
 		c.File("./dist/index.html")
 	})
 
 	r.Run(":8081")
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
+			c.Abort()
+			return
+		}
+
+		claims, err := auth.ValidateToken(tokenString)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("username", claims.Username)
+		c.Next()
+	}
 }
