@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/teamyapchat/yapchat-server/internal/database"
 	log "github.com/teamyapchat/yapchat-server/internal/logging"
@@ -31,16 +32,13 @@ func init() {
 }
 
 func main() {
-	fs := http.FileServer(http.Dir("./dist"))
+	r := gin.Default()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := os.Stat("./dist" + r.URL.Path)
-		if os.IsNotExist(err) {
-			r.URL.Path = "/"
-		}
+	r.Static("/", "./dist")
 
-		fs.ServeHTTP(w, r)
+	r.NoRoute(func(c *gin.Context) {
+		c.File("./dist/index.html")
 	})
 
-	http.ListenAndServe(":8081", nil)
+	r.Run(":8081")
 }
