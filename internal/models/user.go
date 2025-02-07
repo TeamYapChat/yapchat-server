@@ -7,8 +7,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"unique;not null;type:varchar(24);default:null"`
-	Password string `gorm:"not null;default:null"`
+	Username          string `gorm:"unique;not null;type:varchar(24)"`
+	Password          string `gorm:"not null;type:varchar(64)"`
+	Email             string `gorm:"uniqueIndex;not null;type:varchar(100)"`
+	IsVerified        bool   `gorm:"default:false"`
+	VerificationToken string `gorm:"uniqueIndex;not null;type:varchar(64)"`
 }
 
 func (u *User) HashPassword() error {

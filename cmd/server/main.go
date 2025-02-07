@@ -7,10 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/teamyapchat/yapchat-server/internal/auth"
 	"github.com/teamyapchat/yapchat-server/internal/database"
 	"github.com/teamyapchat/yapchat-server/internal/handlers"
 	log "github.com/teamyapchat/yapchat-server/internal/logging"
+	"github.com/teamyapchat/yapchat-server/internal/middleware"
 )
 
 func init() {
@@ -41,11 +41,16 @@ func init() {
 func main() {
 	r := gin.Default()
 
-	r.Static("/", "./dist")
+	r.Use(middleware.RateLimitMiddleware())
 
+	r.StaticFS("/assets", http.Dir("./dist"))
+
+	r.GET("/verify", handlers.Verify)
 	r.POST("/login", handlers.Login)
+	r.POST("/register", handlers.Register)
+
 	api := r.Group("/api")
-	api.Use(AuthMiddleware())
+	api.Use(middleware.AuthMiddleware())
 	{
 		api.GET("/protected", func(c *gin.Context) {
 			username, _ := c.Get("username")
@@ -58,25 +63,4 @@ func main() {
 	})
 
 	r.Run(":8081")
-}
-
-func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
-			c.Abort()
-			return
-		}
-
-		claims, err := auth.ValidateToken(tokenString)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
-			return
-		}
-
-		c.Set("username", claims.Username)
-		c.Next()
-	}
 }

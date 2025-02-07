@@ -51,12 +51,12 @@ func ValidateToken(tokenString string) (*Claims, error) {
 }
 
 func getJWTSecret() string {
-	secretPath := "/run/secrets/jwt-secret"
+	secretPath := os.Getenv("JWT_SECRET_FILE")
 
 	data, err := os.ReadFile(secretPath)
 	if err != nil {
 		log.Error.Fatalln(
-			"JWT Secret not found. Ensure the secret is correctly configured in Docker.",
+			"JWT Secret not found.",
 		)
 	}
 

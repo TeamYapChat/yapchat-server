@@ -20,6 +20,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Potentially allow email or username login
+
 	user, err := db.GetUserByUsername(credentials.Username)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
