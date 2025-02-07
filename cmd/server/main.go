@@ -43,7 +43,11 @@ func main() {
 
 	r.Use(middleware.RateLimitMiddleware())
 
-	r.StaticFS("/assets", http.Dir("./dist"))
+	r.Static("/assets", "./dist/assets")
+
+	r.GET("/", func(c *gin.Context) {
+		c.File("./dist/index.html")
+	})
 
 	r.GET("/verify", handlers.Verify)
 	r.POST("/login", handlers.Login)
