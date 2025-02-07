@@ -22,7 +22,7 @@ func SendVerificationEmail(user models.User) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	verificationLink := fmt.Sprintf("yapchat.xyz/verify?token=%s", user.VerificationToken)
+	verificationLink := fmt.Sprintf("http://yapchat.xyz/verify?token=%s", user.VerificationToken)
 
 	subject := "Confirm your email for your YapChat account"
 
