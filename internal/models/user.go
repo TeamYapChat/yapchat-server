@@ -7,24 +7,22 @@ import (
 
 type User struct {
 	gorm.Model
-	Username          string `gorm:"unique;not null;type:varchar(24)"`
-	Password          string `gorm:"not null;type:varchar(64)"`
-	Email             string `gorm:"uniqueIndex;not null;type:varchar(100)"`
-	IsVerified        bool   `gorm:"default:false"`
-	VerificationToken string `gorm:"uniqueIndex;not null;type:varchar(64)"`
+	Username         string `gorm:"uniqueIndex;not null;type:varchar(24)"`
+	Email            string `gorm:"uniqueIndex;not null;type:varchar(100)"`
+	Password         string `gorm:"not null;type:varchar(64)"`
+	IsVerified       bool   `gorm:"default:false"`
+	VerificationCode string `gorm:"size:255"`
 }
 
-func (u *User) HashPassword() error {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
+func (u *User) BeforeSave(tx *gorm.DB) error {
+	if u.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+
+		u.Password = string(hashedPassword)
 	}
 
-	u.Password = string(hashedPassword)
 	return nil
-}
-
-func (u *User) CheckPassword(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-	return err == nil
 }
