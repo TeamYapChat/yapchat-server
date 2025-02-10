@@ -1,8 +1,8 @@
-name: Deploy Test
+name: Deploy
 on:
  push:
    branches:
-     - "develop"
+     - "main"
 
 permissions:
   contents: read
@@ -50,7 +50,7 @@ jobs:
     - name: Docker Stack Deploy
       uses: cssnr/stack-deploy-action@v1
       with:
-        name: yapchat-test
+        name: yapchat
         file: docker-stack.yml
         host: yapchat.xyz
         user: deploy
