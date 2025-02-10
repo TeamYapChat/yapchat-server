@@ -69,10 +69,15 @@ func main() {
 	router := gin.Default()
 
 	corsCfg := cors.DefaultConfig()
-	corsCfg.AllowOrigins = []string{"http://yapchat.xyz"}
+	// corsCfg.AllowOrigins = []string{"http://yapchat.xyz"}
+	corsCfg.AllowAllOrigins = true
 	corsCfg.AllowWebSockets = true
 	corsCfg.AllowMethods = []string{"GET", "POST"}
-	corsCfg.AllowHeaders = []string{"Authorization", "XMLHttpRequest"}
+	corsCfg.AllowHeaders = []string{
+		"Authorization",
+		"XMLHttpRequest",
+		"Access-Control-Allow-Origin",
+	}
 
 	router.Use(cors.New(corsCfg))
 
