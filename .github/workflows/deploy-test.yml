@@ -38,6 +38,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Create env file
+      run: |
+        echo "GIT_COMMIT_HASH=${{ github.sha }}" >> ./envfile
+
     - name: Docker Stack Deploy
       uses: cssnr/stack-deploy-action@v1
       with:
@@ -46,3 +50,4 @@ jobs:
         host: yapchat.xyz
         user: deploy
         ssh_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        env_file: ./envfile
