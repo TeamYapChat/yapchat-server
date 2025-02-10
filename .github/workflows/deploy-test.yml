@@ -5,6 +5,7 @@ on:
      - "develop"
 
 permissions:
+  contents: read
   packages: write
 
 jobs:
