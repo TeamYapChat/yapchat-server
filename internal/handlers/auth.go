@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/teamyapchat/yapchat-api/internal/models"
-	"github.com/teamyapchat/yapchat-api/internal/repositories"
-	"github.com/teamyapchat/yapchat-api/internal/services"
-	"github.com/teamyapchat/yapchat-api/internal/utils"
+	"github.com/teamyapchat/yapchat-server/internal/models"
+	"github.com/teamyapchat/yapchat-server/internal/repositories"
+	"github.com/teamyapchat/yapchat-server/internal/services"
+	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
 
 type RegisterRequest struct {

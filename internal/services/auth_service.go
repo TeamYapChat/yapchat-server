@@ -8,8 +8,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/exp/rand"
 
-	"github.com/teamyapchat/yapchat-api/internal/models"
-	"github.com/teamyapchat/yapchat-api/internal/repositories"
+	"github.com/teamyapchat/yapchat-server/internal/models"
+	"github.com/teamyapchat/yapchat-server/internal/repositories"
 )
 
 type AuthService struct {
