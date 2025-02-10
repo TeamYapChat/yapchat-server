@@ -1,0 +1,83 @@
+services:
+  # Reverse proxy
+  traefik:
+    image: traefik:v3.3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    command:
+      - "--providers.docker"
+      - "--providers.docker.exposedByDefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # React app
+  app:
+    image: ghcr.io/teamyapchat/yapchat-app:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.app.loadbalancer.server.port=80"
+      - "traefik.http.routers.app.rule=Host(`yapchat.xyz`)"
+
+  # Go backend
+  api:
+    image: ghcr.io/teamyapchat/yapchat-api:${GIT_COMMIT_HASH:-latest}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      - "traefik.http.routers.api.rule=Host(`yapchat.xyz`) && (PathPrefix(`/api`) || PathPrefix(`/auth`) || PathPrefix(`/swagger`))"
+    secrets:
+      - db-password
+      - jwt-secret
+      - mailersend-api-key
+    environment:
+      DB_USER: root
+      DB_PASS_FILE: /run/secrets/db-password
+      DB_HOST: db:3306
+      DB_NAME: yapchat
+      JWT_SECRET_FILE: /run/secrets/jwt-secret
+      MAILERSEND_API_KEY_FILE: /run/secrets/mailersend-api-key
+      EMAIL_TEMPLATE_ID: k68zxl2qqy3lj905
+    depends_on:
+      - db
+
+  # MySQL database
+  db:
+    image: mysql:9.2
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    secrets:
+      - db-password
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db-password
+      MYSQL_DATABASE: yapchat
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
+
+secrets:
+  db-password:
+    external: true
+  jwt-secret:
+    external: true
+  mailersend-api-key:
+    external: true
