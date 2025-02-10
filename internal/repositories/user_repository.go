@@ -3,7 +3,7 @@ package repositories
 import (
 	"gorm.io/gorm"
 
-	"github.com/teamyapchat/yapchat-api/internal/models"
+	"github.com/teamyapchat/yapchat-server/internal/models"
 )
 
 type UserRepository interface {

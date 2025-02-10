@@ -11,13 +11,13 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	_ "github.com/teamyapchat/yapchat-api/docs"
-	"github.com/teamyapchat/yapchat-api/internal/config"
-	"github.com/teamyapchat/yapchat-api/internal/handlers"
-	"github.com/teamyapchat/yapchat-api/internal/middleware"
-	"github.com/teamyapchat/yapchat-api/internal/models"
-	"github.com/teamyapchat/yapchat-api/internal/repositories"
-	"github.com/teamyapchat/yapchat-api/internal/services"
+	_ "github.com/teamyapchat/yapchat-server/docs"
+	"github.com/teamyapchat/yapchat-server/internal/config"
+	"github.com/teamyapchat/yapchat-server/internal/handlers"
+	"github.com/teamyapchat/yapchat-server/internal/middleware"
+	"github.com/teamyapchat/yapchat-server/internal/models"
+	"github.com/teamyapchat/yapchat-server/internal/repositories"
+	"github.com/teamyapchat/yapchat-server/internal/services"
 )
 
 func InitDB(cfg config.Config) (*gorm.DB, error) {
