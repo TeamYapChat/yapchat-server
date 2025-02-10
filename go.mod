@@ -1,4 +1,4 @@
-module github.com/teamyapchat/yapchat-api
+module github.com/teamyapchat/yapchat-server
 
 go 1.23.2
 
