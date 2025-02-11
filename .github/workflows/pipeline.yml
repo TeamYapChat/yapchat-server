@@ -63,16 +63,6 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Copy Docker stack file
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: yapchat.xyz
-        username: deploy
-        port: 22
-        key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-        source: "docker-stack.yml"
-        target: "/home/deploy/"
-
     - name: Deploy using SSH
       uses: appleboy/ssh-action@master
       with:
@@ -93,5 +83,4 @@ jobs:
           docker service update --with-registry-auth --update-order start-first --image ghcr.io/teamyapchat/yapchat-server:${{ github.sha }} yapchat_api
 
           echo "Cleaning up..."
-          rm docker-stack.yml
           docker logout ghcr.io
