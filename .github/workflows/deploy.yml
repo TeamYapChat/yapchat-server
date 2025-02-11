@@ -65,5 +65,5 @@ jobs:
         stack_file: docker-stack.yml
         remote_host: yapchat.xyz
         remote_user: deploy
-        ssh_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        remote_private_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
         env_file: ./envfile
