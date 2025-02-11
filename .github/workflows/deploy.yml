@@ -56,11 +56,14 @@ jobs:
         echo "GIT_COMMIT_HASH=${{ github.sha }}" >> ./envfile
 
     - name: Docker Stack Deploy
-      uses: cssnr/stack-deploy-action@v1
+      uses: kitconcept/docker-stack-deploy@v1.2
       with:
-        name: yapchat
-        file: docker-stack.yml
-        host: yapchat.xyz
-        user: deploy
+        registry: ghcr.io
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GHCR_TOKEN }}
+        stack_name: yapchat
+        stack_file: docker-stack.yml
+        remote_host: yapchat.xyz
+        remote_user: deploy
         ssh_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
         env_file: ./envfile
