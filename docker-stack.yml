@@ -20,7 +20,9 @@ services:
   app:
     image: ghcr.io/teamyapchat/yapchat-ui:latest
     deploy:
-      replicas: 1
+      replicas: 3
+      update_config:
+        order: start-first
       restart_policy:
         condition: on-failure
     labels:
@@ -32,7 +34,9 @@ services:
   api:
     image: ghcr.io/teamyapchat/yapchat-server:latest
     deploy:
-      replicas: 1
+      replicas: 3
+      update_config:
+        order: start-first
       restart_policy:
         condition: on-failure
     labels:
