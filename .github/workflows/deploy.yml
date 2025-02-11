@@ -65,7 +65,7 @@ jobs:
 
     - name: Set up Docker context
       run: |
-        docker context create remote --docker "host=ssh://deploy@${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}"
+        docker context create remote --docker "host=ssh://deploy@yapchat.xyz"
         docker context use remote
 
     - name: Deploy Docker Stack
