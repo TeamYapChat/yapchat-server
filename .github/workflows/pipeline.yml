@@ -85,12 +85,12 @@ jobs:
 
           echo "Logging into registry..."
           echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
-          
-          echo "Pulling image..."
-          docker pull ghcr.io/teamyapchat/yapchat-server:latest
 
-          echo "Deploying stack..."
-          docker stack deploy -c docker-stack.yml -d yapchat --with-registry-auth
+          echo "Pulling image..."
+          docker pull ghcr.io/teamyapchat/yapchat-server:${{ github.sha }}
+
+          echo "Updating service..."
+          docker service update --with-registry-auth --update-order start-first --image ghcr.io/teamyapchat/yapchat-server:${{ github.sha }} yapchat_api
 
           echo "Cleaning up..."
           rm docker-stack.yml
