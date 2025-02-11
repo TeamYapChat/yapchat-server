@@ -63,16 +63,15 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create env file
+    - name: Set up Docker context
       run: |
-        echo "GIT_COMMIT_HASH=${{ github.sha }}" >> ./envfile
+        docker context create remote --docker "host=ssh://deploy@${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}"
+        docker context use remote
 
-    - name: Docker Stack Deploy
-      uses: cssnr/stack-deploy-action@v1
-      with:
-        name: yapchat
-        file: docker-stack.yml
-        host: yapchat.xyz
-        user: deploy
-        ssh_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-        env_file: ./envfile
+    - name: Deploy Docker Stack
+      run: |
+        docker stack deploy -c docker-stack.yml -d yapchat
+
+    - name: Clean up Docker context
+      run: |
+        docker context use default && docker context rm remote
