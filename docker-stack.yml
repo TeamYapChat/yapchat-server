@@ -18,7 +18,7 @@ services:
 
   # React app
   app:
-    image: ghcr.io/teamyapchat/yapchat-app:latest
+    image: ghcr.io/teamyapchat/yapchat-ui:latest
     deploy:
       replicas: 1
       restart_policy:
