@@ -30,7 +30,7 @@ services:
 
   # Go backend
   api:
-    image: ghcr.io/teamyapchat/yapchat-server:${GIT_COMMIT_HASH:-latest}
+    image: ghcr.io/teamyapchat/yapchat-server:latest
     deploy:
       replicas: 1
       restart_policy:
