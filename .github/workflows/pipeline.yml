@@ -1,4 +1,4 @@
-name: Deploy
+name: Build, Push, and Deploy
 on:
  push:
    branches:
@@ -63,31 +63,31 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up Docker context
-      run: |
-        mkdir -p /root/.ssh
-        chmod 0700 /root/.ssh
-        ssh-keyscan -p "22" -H "yapchat.xyz" >> /root/.ssh/known_hosts
+    - name: Copy Docker stack file
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: yapchat.xyz
+        username: deploy
+        port: 22
+        key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        source: "docker-stack.yml"
+        target: "/home/deploy/"
 
-        echo "Adding SSH Key to SSH Agent..."
-        echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > /root/.ssh/id_ed25519
-        chmod 0600 /root/.ssh/id_ed25519
-        eval "$(ssh-agent -s)"
-        ssh-add /root/.ssh/id_ed25519
+    - name: Deploy using SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd $HOME
+          
+          echo "Pulling image..."
+          docker pull ghcr.io/teamyapchat/yapchat-server:latest
 
-        echo "Creating Docker context..."
-        docker context create remote --docker "host=ssh://deploy@yapchat.xyz"
-        docker context use remote
+          echo "Deploying stack..."
+          docker stack deploy -c docker-stack.yml -d yapchat --with-registry-auth
 
-    - name: Deploy Docker Stack
-      run: |
-        echo "Pulling image..."
-        docker pull ghcr.io/teamyapchat/yapchat-server:latest
-
-        echo "Deploying stack..."
-        docker stack deploy -c docker-stack.yml -d yapchat
-
-    - name: Clean up Docker context
-      run: |
-        echo "Cleaning up..."
-        docker context use default && docker context rm remote
+          echo "Cleaning up..."
+          rm docker-stack.yml
