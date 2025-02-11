@@ -70,6 +70,7 @@ jobs:
 
     - name: Deploy Docker Stack
       run: |
+        docker pull ghcr.io/teamyapchat/yapchat-server:latest
         docker stack deploy -c docker-stack.yml -d yapchat
 
     - name: Clean up Docker context
