@@ -65,14 +65,29 @@ jobs:
 
     - name: Set up Docker context
       run: |
+        mkdir -p /root/.ssh
+        chmod 0700 /root/.ssh
+        ssh-keyscan -p "22" -H "yapchat.xyz" >> /root/.ssh/known_hosts
+
+        echo "Adding SSH Key to SSH Agent..."
+        echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > /root/.ssh/id_ed25519
+        chmod 0600 /root/.ssh/id_ed25519
+        eval "$(ssh-agent -s)"
+        ssh-add /root/.ssh/id_ed25519
+
+        echo "Creating Docker context..."
         docker context create remote --docker "host=ssh://deploy@yapchat.xyz"
         docker context use remote
 
     - name: Deploy Docker Stack
       run: |
+        echo "Pulling image..."
         docker pull ghcr.io/teamyapchat/yapchat-server:latest
+
+        echo "Deploying stack..."
         docker stack deploy -c docker-stack.yml -d yapchat
 
     - name: Clean up Docker context
       run: |
+        echo "Cleaning up..."
         docker context use default && docker context rm remote
