@@ -82,6 +82,9 @@ jobs:
         port: 22
         script: |
           cd $HOME
+
+          echo "Logging into registry..."
+          echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
           
           echo "Pulling image..."
           docker pull ghcr.io/teamyapchat/yapchat-server:latest
@@ -91,3 +94,4 @@ jobs:
 
           echo "Cleaning up..."
           rm docker-stack.yml
+          docker logout ghcr.io
