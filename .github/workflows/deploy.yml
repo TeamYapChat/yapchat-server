@@ -56,7 +56,7 @@ jobs:
         echo "GIT_COMMIT_HASH=${{ github.sha }}" >> ./envfile
 
     - name: Docker Stack Deploy
-      uses: kitconcept/docker-stack-deploy@v1.2
+      uses: kitconcept/docker-stack-deploy@v1.0.1
       with:
         registry: ghcr.io
         username: ${{ secrets.GHCR_USERNAME }}
