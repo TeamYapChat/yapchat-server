@@ -8,12 +8,21 @@ services:
         condition: on-failure
     command:
       - "--providers.docker"
-      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    environment:
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
     ports:
       - "80:80"
       - "443:443"
     volumes:
+      - letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
 
   # React app
@@ -29,6 +38,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.app.loadbalancer.server.port=80"
       - "traefik.http.routers.app.rule=Host(`yapchat.xyz`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls.certresolver=le"
 
   # Go backend
   api:
@@ -43,6 +54,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.api.loadbalancer.server.port=8080"
       - "traefik.http.routers.api.rule=Host(`yapchat.xyz`) && (PathPrefix(`/api`) || PathPrefix(`/auth`) || PathPrefix(`/swagger`))"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=le"
     secrets:
       - db-password
       - jwt-secret
@@ -77,6 +90,7 @@ services:
 
 volumes:
   db-data:
+  letsencrypt:
 
 secrets:
   db-password:
