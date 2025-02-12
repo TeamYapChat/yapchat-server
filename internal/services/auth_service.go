@@ -28,7 +28,7 @@ func NewAuthService(
 		userRepo:  repo,
 		mailer:    mailer,
 		jwtSecret: jwtSecret,
-		baseURL:   "http://yapchat.xyz",
+		baseURL:   "https://yapchat.xyz",
 	}
 }
 
@@ -43,11 +43,6 @@ func (s *AuthService) Register(user *models.User) error {
 
 	if err := s.userRepo.CreateUser(user); err != nil {
 		return err
-	}
-
-	verificationURL := s.baseURL + "/auth/verify-email?code=" + user.VerificationCode
-	if err := s.mailer.SendVerificationEmail(user.Email, user.Username, verificationURL); err != nil {
-		return errors.New("failed to send verification email")
 	}
 
 	return nil
@@ -69,6 +64,44 @@ func (s *AuthService) Login(email, password string) (string, error) {
 	})
 
 	return token.SignedString([]byte(s.jwtSecret))
+}
+
+func (s *AuthService) SendVerificationEmail(id uint) error {
+	user, err := s.userRepo.FindUserByID(id)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if user.IsVerified {
+		return errors.New("user already verified")
+	}
+
+	verificationURL := s.baseURL + "/auth/verify?code=" + user.VerificationCode
+	if err := s.mailer.SendVerificationEmail(user.Email, user.Username, verificationURL); err != nil {
+		return errors.New("failed to send verification email")
+	}
+
+	return nil
+}
+
+func (s *AuthService) VerifyEmail(code string) error {
+	user, err := s.userRepo.FindUserByVerificationCode(code)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if user.IsVerified {
+		return errors.New("user already verified")
+	}
+
+	user.IsVerified = true
+	user.VerificationCode = ""
+
+	if err := s.userRepo.UpdateUser(user); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func generateVerificationCode() string {

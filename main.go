@@ -85,10 +85,11 @@ func main() {
 
 	public := router.Group("/auth")
 	{
-		public.GET("/verify-email", handlers.VerifyEmailHandler(userRepo))
+		public.GET("/verify-email", handlers.VerifyEmailHandler(*authService))
 
 		public.POST("/register", handlers.RegisterHandler(*authService))
 		public.POST("/login", handlers.LoginHandler(*authService))
+		public.POST("/send-verification-email", handlers.SendEmailHandler(*authService))
 	}
 
 	protected := router.Group("/api")

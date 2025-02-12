@@ -9,6 +9,7 @@ import (
 type UserRepository interface {
 	CreateUser(user *models.User) error
 	UpdateUser(user *models.User) error
+	FindUserByID(id uint) (*models.User, error)
 	FindUserByEmail(email string) (*models.User, error)
 	FindUserByVerificationCode(code string) (*models.User, error)
 }
@@ -27,6 +28,13 @@ func (r *MySQLUserRepository) CreateUser(user *models.User) error {
 
 func (r *MySQLUserRepository) UpdateUser(user *models.User) error {
 	return r.db.Save(user).Error
+}
+
+func (r *MySQLUserRepository) FindUserByID(id uint) (*models.User, error) {
+	var user models.User
+	err := r.db.Where("id = ?", id).First(&user).Error
+
+	return &user, err
 }
 
 func (r *MySQLUserRepository) FindUserByEmail(email string) (*models.User, error) {

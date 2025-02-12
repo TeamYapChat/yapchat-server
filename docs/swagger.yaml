@@ -2,8 +2,10 @@ definitions:
   handlers.LoginRequest:
     properties:
       email:
+        example: john@example.com
         type: string
       password:
+        example: password123
         type: string
     required:
     - email
@@ -12,24 +14,38 @@ definitions:
   handlers.RegisterRequest:
     properties:
       email:
+        example: john@example.com
         type: string
       password:
+        example: password123
         minLength: 8
         type: string
       username:
+        example: john_doe
         type: string
     required:
     - email
     - password
     - username
     type: object
+  handlers.SendEmailRequest:
+    properties:
+      id:
+        example: 123
+        type: integer
+    required:
+    - id
+    type: object
   handlers.UserResponse:
     properties:
       email:
+        example: john@example.com
         type: string
       id:
+        example: 123
         type: integer
       username:
+        example: john_doe
         type: string
     type: object
   utils.ErrorResponse:
@@ -53,6 +69,12 @@ definitions:
     type: object
 info:
   contact: {}
+  description: The official API for YapChat
+  license:
+    name: GPLv3
+    url: https://www.gnu.org/licenses/gpl-3.0.en.html
+  title: YapChat API
+  version: "1.0"
 paths:
   /auth/login:
     post:
@@ -130,6 +152,44 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Register new user
+      tags:
+      - auth
+  /auth/send-verification-email:
+    post:
+      consumes:
+      - application/json
+      description: Send verification email to the user's email address
+      parameters:
+      - description: User ID
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Send verification email
       tags:
       - auth
   /auth/verify-email:
