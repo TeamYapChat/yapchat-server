@@ -67,6 +67,7 @@ definitions:
         example: true
         type: boolean
     type: object
+host: api.yapchat.xyz
 info:
   contact: {}
   description: The official API for YapChat

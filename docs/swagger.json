@@ -10,6 +10,7 @@
         },
         "version": "1.0"
     },
+    "host": "api.yapchat.xyz",
     "paths": {
         "/auth/login": {
             "post": {

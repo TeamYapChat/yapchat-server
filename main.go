@@ -51,6 +51,8 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 
 // @license.name    GPLv3
 // @license.url     https://www.gnu.org/licenses/gpl-3.0.en.html
+
+// @host            api.yapchat.xyz
 func main() {
 	cfg := config.LoadConfig()
 
@@ -92,7 +94,7 @@ func main() {
 		public.POST("/send-verification-email", handlers.SendEmailHandler(*authService))
 	}
 
-	protected := router.Group("/api")
+	protected := router.Group("/v1")
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
 	}

@@ -53,7 +53,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.api.loadbalancer.server.port=8080"
-      - "traefik.http.routers.api.rule=Host(`yapchat.xyz`) && (PathPrefix(`/api`) || PathPrefix(`/auth`) || PathPrefix(`/swagger`))"
+      - "traefik.http.routers.api.rule=Host(`api.yapchat.xyz`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=le"
     secrets:
