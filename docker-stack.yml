@@ -37,7 +37,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.app.loadbalancer.server.port=80"
-      - "traefik.http.routers.app.rule=Host(`yapchat.xyz`)"
+      - "traefik.http.routers.app.rule=Host(`yapchat.xyz`) || Host(`www.yapchat.xyz`)"
       - "traefik.http.routers.app.entrypoints=websecure"
       - "traefik.http.routers.app.tls.certresolver=le"
 
