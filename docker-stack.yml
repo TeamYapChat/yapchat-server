@@ -40,6 +40,8 @@ services:
       - "traefik.http.routers.app.rule=Host(`yapchat.xyz`) || Host(`www.yapchat.xyz`)"
       - "traefik.http.routers.app.entrypoints=websecure"
       - "traefik.http.routers.app.tls.certresolver=le"
+    environment:
+      VITE_BASE_URL: https://api.yapchat.xyz
 
   # Go backend
   api:
