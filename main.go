@@ -78,6 +78,7 @@ func main() {
 		"Authorization",
 		"XMLHttpRequest",
 		"Access-Control-Allow-Origin",
+		"Origin",
 	}
 
 	router.Use(cors.New(corsCfg))
