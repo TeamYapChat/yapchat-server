@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/log"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -69,19 +68,7 @@ func main() {
 	authService := services.NewAuthService(userRepo, mailer, cfg.JWTSecret)
 
 	router := gin.Default()
-
-	corsCfg := cors.DefaultConfig()
-	corsCfg.AllowOrigins = []string{"https://yapchat.xyz", "https://www.yapchat.xyz"}
-	corsCfg.AllowWebSockets = true
-	corsCfg.AllowMethods = []string{"GET", "POST"}
-	corsCfg.AllowHeaders = []string{
-		"Authorization",
-		"XMLHttpRequest",
-		"Access-Control-Allow-Origin",
-		"Origin",
-	}
-
-	router.Use(cors.New(corsCfg))
+	router.Use(middleware.CORS())
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
