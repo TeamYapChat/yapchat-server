@@ -38,7 +38,10 @@ type UserResponse struct {
 func (h *UserHandler) GetUser(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("user ID not found in context"))
+		c.JSON(
+			http.StatusInternalServerError,
+			utils.NewErrorResponse("user ID not found in context"),
+		)
 		return
 	}
 
@@ -73,7 +76,10 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("user ID not found in context"))
+		c.JSON(
+			http.StatusInternalServerError,
+			utils.NewErrorResponse("user ID not found in context"),
+		)
 		return
 	}
 
@@ -111,7 +117,10 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("user ID not found in context"))
+		c.JSON(
+			http.StatusInternalServerError,
+			utils.NewErrorResponse("user ID not found in context"),
+		)
 		return
 	}
 

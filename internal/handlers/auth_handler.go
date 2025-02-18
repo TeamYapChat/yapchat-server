@@ -20,8 +20,8 @@ type RegisterRequest struct {
 
 type LoginRequest struct {
 	Email    string `json:"email"    binding:"omitempty,email" example:"john@example.com"`
-	Username string `json:"username" binding:"omitempty" example:"john_doe"`
-	Password string `json:"password" binding:"required"       example:"password123"`
+	Username string `json:"username" binding:"omitempty"       example:"john_doe"`
+	Password string `json:"password" binding:"required"        example:"password123"`
 }
 
 type SendEmailRequest struct {
