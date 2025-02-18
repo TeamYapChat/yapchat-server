@@ -11,6 +11,14 @@ import (
 	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
 
+type AuthHandler struct {
+	authService *services.AuthService
+}
+
+func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+	return &AuthHandler{authService: authService}
+}
+
 // Request Structs
 type RegisterRequest struct {
 	Username string `json:"username" binding:"required"       example:"john_doe"`
@@ -44,57 +52,55 @@ type VerifyEmailRequest struct {
 // @Failure      409  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /auth/register [post]
-func RegisterHandler(authService services.AuthService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req RegisterRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(
-				http.StatusBadRequest,
-				utils.ErrorResponse{Success: false, Message: "Invalid request body"},
-			)
-			return
-		}
-
-		user := models.User{
-			Username: req.Username,
-			Email:    req.Email,
-			Password: req.Password,
-		}
-
-		if err := authService.Register(&user); err != nil {
-			statusCode := http.StatusInternalServerError
-			if err.Error() == "user already exists" {
-				statusCode = http.StatusConflict
-			}
-
-			if err.Error() == "failed to send verification email" {
-				log.Error(
-					"Failed to send verification email",
-					"username",
-					req.Username,
-					"email",
-					req.Email,
-					"err",
-					err,
-				)
-			}
-
-			c.JSON(statusCode, utils.ErrorResponse{Success: false, Message: err.Error()})
-			return
-		}
-
-		userResponse := UserResponse{
-			ID:       user.ID,
-			Username: user.Username,
-			Email:    user.Email,
-		}
-
-		c.JSON(http.StatusCreated, utils.SuccessResponse{
-			Success: true,
-			Message: "User registered successfully",
-			Data:    userResponse,
-		})
+func (h *AuthHandler) RegisterHandler(c *gin.Context) {
+	var req RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			utils.ErrorResponse{Success: false, Message: "Invalid request body"},
+		)
+		return
 	}
+
+	user := models.User{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	if err := h.authService.Register(&user); err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "user already exists" {
+			statusCode = http.StatusConflict
+		}
+
+		if err.Error() == "failed to send verification email" {
+			log.Error(
+				"Failed to send verification email",
+				"username",
+				req.Username,
+				"email",
+				req.Email,
+				"err",
+				err,
+			)
+		}
+
+		c.JSON(statusCode, utils.ErrorResponse{Success: false, Message: err.Error()})
+		return
+	}
+
+	userResponse := UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+	}
+
+	c.JSON(http.StatusCreated, utils.SuccessResponse{
+		Success: true,
+		Message: "User registered successfully",
+		Data:    userResponse,
+	})
 }
 
 // LoginHandler godoc
@@ -109,46 +115,44 @@ func RegisterHandler(authService services.AuthService) gin.HandlerFunc {
 // @Failure      401  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /auth/login [post]
-func LoginHandler(authService services.AuthService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req LoginRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(
-				http.StatusBadRequest,
-				utils.ErrorResponse{Success: false, Message: "Invalid request body"},
-			)
-			return
-		}
-
-		var token string
-		var err error
-
-		if req.Email != "" {
-			token, err = authService.Login(req.Email, req.Password)
-		} else if req.Username != "" {
-			token, err = authService.Login(req.Username, req.Password)
-		} else {
-			c.JSON(
-				http.StatusBadRequest,
-				utils.ErrorResponse{Success: false, Message: "Email or Username is required"},
-			)
-			return
-		}
-
-		if err != nil {
-			c.JSON(
-				http.StatusUnauthorized,
-				utils.ErrorResponse{Success: false, Message: "Invalid credentials"},
-			)
-			return
-		}
-
-		c.JSON(http.StatusOK, utils.SuccessResponse{
-			Success: true,
-			Message: "Login successful",
-			Data:    token,
-		})
+func (h *AuthHandler) LoginHandler(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			utils.ErrorResponse{Success: false, Message: "Invalid request body"},
+		)
+		return
 	}
+
+	var token string
+	var err error
+
+	if req.Email != "" {
+		token, err = h.authService.Login(req.Email, req.Password)
+	} else if req.Username != "" {
+		token, err = h.authService.Login(req.Username, req.Password)
+	} else {
+		c.JSON(
+			http.StatusBadRequest,
+			utils.ErrorResponse{Success: false, Message: "Email or Username is required"},
+		)
+		return
+	}
+
+	if err != nil {
+		c.JSON(
+			http.StatusUnauthorized,
+			utils.ErrorResponse{Success: false, Message: "Invalid credentials"},
+		)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.SuccessResponse{
+		Success: true,
+		Message: "Login successful",
+		Data:    token,
+	})
 }
 
 // SendEmailHandler godoc
@@ -164,46 +168,44 @@ func LoginHandler(authService services.AuthService) gin.HandlerFunc {
 // @Failure      409  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /auth/send-verification-email [post]
-func SendEmailHandler(authService services.AuthService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req SendEmailRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+func (h *AuthHandler) SendEmailHandler(c *gin.Context) {
+	var req SendEmailRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			utils.ErrorResponse{Success: false, Message: "Invalid request body"},
+		)
+		return
+	}
+
+	if err := h.authService.SendVerificationEmail(req.Id); err != nil {
+		if err.Error() == "user not found" {
+			c.JSON(
+				http.StatusNotFound,
+				utils.ErrorResponse{Success: false, Message: "User not found"},
+			)
+			return
+		}
+
+		if err.Error() == "user already verified" {
 			c.JSON(
 				http.StatusBadRequest,
-				utils.ErrorResponse{Success: false, Message: "Invalid request body"},
+				utils.ErrorResponse{Success: false, Message: "Email already verified"},
 			)
 			return
 		}
 
-		if err := authService.SendVerificationEmail(req.Id); err != nil {
-			if err.Error() == "user not found" {
-				c.JSON(
-					http.StatusNotFound,
-					utils.ErrorResponse{Success: false, Message: "User not found"},
-				)
-				return
-			}
-
-			if err.Error() == "user already verified" {
-				c.JSON(
-					http.StatusBadRequest,
-					utils.ErrorResponse{Success: false, Message: "Email already verified"},
-				)
-				return
-			}
-
-			c.JSON(
-				http.StatusInternalServerError,
-				utils.ErrorResponse{Success: false, Message: "Failed to send verification email"},
-			)
-			return
-		}
-
-		c.JSON(http.StatusOK, utils.SuccessResponse{
-			Success: true,
-			Message: "Verification email sent successfully",
-		})
+		c.JSON(
+			http.StatusInternalServerError,
+			utils.ErrorResponse{Success: false, Message: "Failed to send verification email"},
+		)
+		return
 	}
+
+	c.JSON(http.StatusOK, utils.SuccessResponse{
+		Success: true,
+		Message: "Verification email sent successfully",
+	})
 }
 
 // VerifyEmailHandler godoc
@@ -218,44 +220,42 @@ func SendEmailHandler(authService services.AuthService) gin.HandlerFunc {
 // @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /auth/verify-email [get]
-func VerifyEmailHandler(authService services.AuthService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req VerifyEmailRequest
-		if err := c.ShouldBindQuery(&req); err != nil {
+func (h *AuthHandler) VerifyEmailHandler(c *gin.Context) {
+	var req VerifyEmailRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			utils.ErrorResponse{Success: false, Message: "Invalid verification code"},
+		)
+		return
+	}
+
+	if err := h.authService.VerifyEmail(req.Code); err != nil {
+		if err.Error() == "user not found" {
 			c.JSON(
-				http.StatusBadRequest,
+				http.StatusNotFound,
 				utils.ErrorResponse{Success: false, Message: "Invalid verification code"},
 			)
 			return
 		}
 
-		if err := authService.VerifyEmail(req.Code); err != nil {
-			if err.Error() == "user not found" {
-				c.JSON(
-					http.StatusNotFound,
-					utils.ErrorResponse{Success: false, Message: "Invalid verification code"},
-				)
-				return
-			}
-
-			if err.Error() == "user already verified" {
-				c.JSON(
-					http.StatusBadRequest,
-					utils.ErrorResponse{Success: false, Message: "Email already verified"},
-				)
-				return
-			}
-
+		if err.Error() == "user already verified" {
 			c.JSON(
-				http.StatusInternalServerError,
-				utils.ErrorResponse{Success: false, Message: "Failed to verify email"},
+				http.StatusBadRequest,
+				utils.ErrorResponse{Success: false, Message: "Email already verified"},
 			)
 			return
 		}
 
-		c.JSON(http.StatusOK, utils.SuccessResponse{
-			Success: true,
-			Message: "Email verified successfully",
-		})
+		c.JSON(
+			http.StatusInternalServerError,
+			utils.ErrorResponse{Success: false, Message: "Failed to verify email"},
+		)
+		return
 	}
+
+	c.JSON(http.StatusOK, utils.SuccessResponse{
+		Success: true,
+		Message: "Email verified successfully",
+	})
 }

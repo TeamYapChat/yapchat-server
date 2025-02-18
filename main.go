@@ -47,10 +47,10 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 // @title           YapChat API
 // @version         1.0
 // @description     The official API for YapChat
-
+//
 // @license.name    GPLv3
 // @license.url     https://www.gnu.org/licenses/gpl-3.0.en.html
-
+//
 // @host            api.yapchat.xyz
 func main() {
 	cfg := config.LoadConfig()
@@ -65,8 +65,6 @@ func main() {
 
 	mailer := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
 
-	authService := services.NewAuthService(userRepo, mailer, cfg.JWTSecret)
-
 	router := gin.Default()
 	router.Use(middleware.CORS())
 
@@ -74,11 +72,14 @@ func main() {
 
 	public := router.Group("/auth")
 	{
-		public.GET("/verify-email", handlers.VerifyEmailHandler(*authService))
+		authService := services.NewAuthService(userRepo, mailer, cfg.JWTSecret)
+		authHandler := handlers.NewAuthHandler(authService)
 
-		public.POST("/register", handlers.RegisterHandler(*authService))
-		public.POST("/login", handlers.LoginHandler(*authService))
-		public.POST("/send-verification-email", handlers.SendEmailHandler(*authService))
+		public.GET("/verify-email", authHandler.VerifyEmailHandler)
+
+		public.POST("/register", authHandler.RegisterHandler)
+		public.POST("/login", authHandler.LoginHandler)
+		public.POST("/send-verification-email", authHandler.SendEmailHandler)
 	}
 
 	protected := router.Group("/v1")
