@@ -11,6 +11,7 @@ type UserRepository interface {
 	UpdateUser(user *models.User) error
 	FindUserByID(id uint) (*models.User, error)
 	FindUserByEmail(email string) (*models.User, error)
+	FindUserByUsername(username string) (*models.User, error)
 	FindUserByVerificationCode(code string) (*models.User, error)
 }
 
@@ -40,6 +41,13 @@ func (r *MySQLUserRepository) FindUserByID(id uint) (*models.User, error) {
 func (r *MySQLUserRepository) FindUserByEmail(email string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("email = ?", email).First(&user).Error
+
+	return &user, err
+}
+
+func (r *MySQLUserRepository) FindUserByUsername(username string) (*models.User, error) {
+	var user models.User
+	err := r.db.Where("username = ?", username).First(&user).Error
 
 	return &user, err
 }

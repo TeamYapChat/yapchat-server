@@ -19,7 +19,8 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"    binding:"required,email" example:"john@example.com"`
+	Email    string `json:"email"    binding:"omitempty,email" example:"john@example.com"`
+	Username string `json:"username" binding:"omitempty" example:"john_doe"`
 	Password string `json:"password" binding:"required"       example:"password123"`
 }
 
@@ -105,7 +106,7 @@ func RegisterHandler(authService services.AuthService) gin.HandlerFunc {
 
 // LoginHandler godoc
 // @Summary      Authenticate user
-// @Description  Login with email and password to receive JWT token
+// @Description  Login with email or username and password to receive JWT token
 // @Tags         auth
 // @Accept       json
 // @Produce      json
@@ -126,7 +127,21 @@ func LoginHandler(authService services.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		token, err := authService.Login(req.Email, req.Password)
+		var token string
+		var err error
+
+		if req.Email != "" {
+			token, err = authService.Login(req.Email, req.Password)
+		} else if req.Username != "" {
+			token, err = authService.Login(req.Username, req.Password)
+		} else {
+			c.JSON(
+				http.StatusBadRequest,
+				utils.ErrorResponse{Success: false, Message: "Email or Username is required"},
+			)
+			return
+		}
+
 		if err != nil {
 			c.JSON(
 				http.StatusUnauthorized,

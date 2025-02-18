@@ -48,10 +48,16 @@ func (s *AuthService) Register(user *models.User) error {
 	return nil
 }
 
-func (s *AuthService) Login(email, password string) (string, error) {
-	user, err := s.userRepo.FindUserByEmail(email)
+func (s *AuthService) Login(emailOrUsername, password string) (string, error) {
+	var user *models.User
+	var err error
+
+	user, err = s.userRepo.FindUserByEmail(emailOrUsername)
 	if err != nil {
-		return "", errors.New("invalid credentials")
+		user, err = s.userRepo.FindUserByUsername(emailOrUsername)
+		if err != nil {
+			return "", errors.New("invalid credentials")
+		}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
