@@ -1,4 +1,13 @@
 definitions:
+  handlers.ChatRoomResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      type:
+        type: string
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -283,6 +292,37 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Create a new chat room
+      tags:
+      - chatrooms
+  /v1/chatrooms/{id}:
+    get:
+      description: Get chat room by ID
+      parameters:
+      - description: Chat room ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ChatRoomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get chat room by ID
       tags:
       - chatrooms
   /v1/user:

@@ -1,9 +1,15 @@
 package services
 
 import (
+	"errors"
+
+	"gorm.io/gorm"
+
 	"github.com/teamyapchat/yapchat-server/internal/models"
 	"github.com/teamyapchat/yapchat-server/internal/repositories"
 )
+
+var ErrChatRoomNotFound = errors.New("chat room not found")
 
 type ChatRoomService struct {
 	repo *repositories.ChatRoomRepository
@@ -19,7 +25,14 @@ func (s *ChatRoomService) CreateChatRoom(chatroom *models.ChatRoom) error {
 }
 
 func (s *ChatRoomService) GetChatRoomByID(id uint) (*models.ChatRoom, error) {
-	return s.repo.GetByID(id)
+	chatroom, err := s.repo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrChatRoomNotFound
+		}
+		return nil, err
+	}
+	return chatroom, nil
 }
 
 func (s *ChatRoomService) ListChatRooms() ([]*models.ChatRoom, error) {

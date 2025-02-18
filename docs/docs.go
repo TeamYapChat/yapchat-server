@@ -301,6 +301,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/chatrooms/{id}": {
+            "get": {
+                "description": "Get chat room by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chatrooms"
+                ],
+                "summary": "Get chat room by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ChatRoomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/user": {
             "get": {
                 "security": [
@@ -461,6 +508,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.ChatRoomResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.LoginRequest": {
             "type": "object",
             "required": [

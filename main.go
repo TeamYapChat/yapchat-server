@@ -93,15 +93,17 @@ func main() {
 		protected.POST("/user", userHandler.UpdateUser)
 		protected.DELETE("/user", userHandler.DeleteUser)
 
-		// Websocket routes
-		protected.GET("/ws", websocket.WebSocketHandler)
-
+		// Chatroom routes
 		chatroomRepo := repositories.NewChatRoomRepository(db)
 		chatroomService := services.NewChatRoomService(chatroomRepo)
 
 		chatroomHandler := handlers.NewChatRoomHandler(chatroomService)
 
 		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
+		protected.GET("/chatrooms/:id", chatroomHandler.GetChatRoomByID)
+
+		// Websocket routes
+		protected.GET("/ws", websocket.WebSocketHandler)
 	}
 
 	router.Run(":8080")
