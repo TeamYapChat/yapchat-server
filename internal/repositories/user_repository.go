@@ -13,6 +13,7 @@ type UserRepository interface {
 	FindUserByEmail(email string) (*models.User, error)
 	FindUserByUsername(username string) (*models.User, error)
 	FindUserByVerificationCode(code string) (*models.User, error)
+	DeleteUser(id uint) error
 }
 
 type MySQLUserRepository struct {
@@ -55,6 +56,12 @@ func (r *MySQLUserRepository) FindUserByUsername(username string) (*models.User,
 func (r *MySQLUserRepository) FindUserByVerificationCode(code string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("verification_code = ?", code).First(&user).Error
-
 	return &user, err
+}
+
+func (r *MySQLUserRepository) DeleteUser(id uint) error {
+	var user models.User
+	err := r.db.Where("id = ?", id).Delete(&user).Error
+
+	return err
 }

@@ -7,8 +7,10 @@ definitions:
       password:
         example: password123
         type: string
+      username:
+        example: john_doe
+        type: string
     required:
-    - email
     - password
     type: object
   handlers.RegisterRequest:
@@ -48,6 +50,8 @@ definitions:
         example: john_doe
         type: string
     type: object
+  models.User:
+    type: object
   utils.ErrorResponse:
     properties:
       message:
@@ -81,7 +85,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Login with email and password to receive JWT token
+      description: Login with email or username and password to receive JWT token
       parameters:
       - description: User credentials
         in: body
@@ -226,4 +230,92 @@ paths:
       summary: Verify email address
       tags:
       - auth
+  /v1/user:
+    delete:
+      description: Delete the currently authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete user profile
+      tags:
+      - users
+    get:
+      description: Get details of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.UserResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user profile
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Update details of the currently authenticated user
+      parameters:
+      - description: User details to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update user profile
+      tags:
+      - users
 swagger: "2.0"

@@ -84,6 +84,12 @@ func main() {
 	protected := router.Group("/v1")
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
+		userService := services.NewUserService(userRepo)
+		userHandler := handlers.NewUserHandler(userService)
+
+		protected.GET("/user", userHandler.GetUser)
+		protected.POST("/user", userHandler.UpdateUser)
+		protected.DELETE("/user", userHandler.DeleteUser)
 	}
 
 	router.Run(":8080")

@@ -32,13 +32,6 @@ type VerifyEmailRequest struct {
 	Code string `form:"code" binding:"required"`
 }
 
-// Response Structs
-type UserResponse struct {
-	ID       uint   `json:"id"       example:"123"`
-	Username string `json:"username" example:"john_doe"`
-	Email    string `json:"email"    example:"john@example.com"`
-}
-
 // RegisterHandler godoc
 // @Summary      Register new user
 // @Description  Create a new user account
