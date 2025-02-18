@@ -12,6 +12,7 @@ type User struct {
 	Password         string `gorm:"not null;type:varchar(64)"`
 	IsVerified       bool   `gorm:"default:false"`
 	VerificationCode string `gorm:"size:255"`
+	ImageURL         string `gorm:"varchar(100)"`
 }
 
 func (u *User) BeforeSave(tx *gorm.DB) error {

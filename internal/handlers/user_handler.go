@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/teamyapchat/yapchat-server/internal/models"
 	"github.com/teamyapchat/yapchat-server/internal/services"
 	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
@@ -20,9 +19,10 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 
 // Response Structs
 type UserResponse struct {
-	ID       uint   `json:"id"       example:"123"`
-	Username string `json:"username" example:"john_doe"`
-	Email    string `json:"email"    example:"john@example.com"`
+	ID       uint   `json:"id"                  example:"123"`
+	Username string `json:"username"            example:"john_doe"`
+	Email    string `json:"email"               example:"john@example.com"`
+	ImageURL string `json:"image_url,omitempty" example:"https://example.com/profile_picture.jpg"`
 }
 
 // GetUser godoc
@@ -45,7 +45,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.GetUserByID(userID.(string))
+	user, err := h.userService.GetUserByID(userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse(err.Error()))
 		return
@@ -55,6 +55,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,
+		ImageURL: user.ImageURL,
 	}
 
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
@@ -83,13 +84,13 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var requestBody utils.UpdateUserRequest
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, utils.NewErrorResponse(err.Error()))
 		return
 	}
 
-	updatedUser, err := h.userService.UpdateUser(userID.(string), user)
+	updatedUser, err := h.userService.UpdateUser(userID.(uint), requestBody)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse(err.Error()))
 		return
@@ -99,6 +100,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		ID:       updatedUser.ID,
 		Username: updatedUser.Username,
 		Email:    updatedUser.Email,
+		ImageURL: updatedUser.ImageURL,
 	}
 
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
@@ -124,7 +126,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err := h.userService.DeleteUser(userID.(string))
+	err := h.userService.DeleteUser(userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse(err.Error()))
 		return

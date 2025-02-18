@@ -46,6 +46,9 @@ definitions:
       id:
         example: 123
         type: integer
+      image_url:
+        example: https://example.com/profile_picture.jpg
+        type: string
       username:
         example: john_doe
         type: string

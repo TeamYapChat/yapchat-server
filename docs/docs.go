@@ -471,6 +471,10 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 123
                 },
+                "image_url": {
+                    "type": "string",
+                    "example": "https://example.com/profile_picture.jpg"
+                },
                 "username": {
                     "type": "string",
                     "example": "john_doe"
