@@ -17,6 +17,7 @@ import (
 	"github.com/teamyapchat/yapchat-server/internal/models"
 	"github.com/teamyapchat/yapchat-server/internal/repositories"
 	"github.com/teamyapchat/yapchat-server/internal/services"
+	"github.com/teamyapchat/yapchat-server/internal/websocket"
 )
 
 func InitDB(cfg config.Config) (*gorm.DB, error) {
@@ -33,7 +34,7 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.ChatRoom{}, &models.Message{}); err != nil {
 		return nil, err
 	}
 
@@ -81,7 +82,6 @@ func main() {
 		public.POST("/login", authHandler.LoginHandler)
 		public.POST("/send-verification-email", authHandler.SendEmailHandler)
 	}
-
 	protected := router.Group("/v1")
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
@@ -91,6 +91,8 @@ func main() {
 		protected.GET("/user", userHandler.GetUser)
 		protected.POST("/user", userHandler.UpdateUser)
 		protected.DELETE("/user", userHandler.DeleteUser)
+
+		protected.GET("/ws", websocket.WebSocketHandler)
 	}
 
 	router.Run(":8080")

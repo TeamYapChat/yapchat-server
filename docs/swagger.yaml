@@ -321,4 +321,11 @@ paths:
       summary: Update user profile
       tags:
       - users
+  /ws:
+    get:
+      description: Handles websocket connections for real-time communication.
+      responses: {}
+      summary: Handle websocket connection
+      tags:
+      - websocket
 swagger: "2.0"

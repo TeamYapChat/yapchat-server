@@ -402,6 +402,16 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/ws": {
+            "get": {
+                "description": "Handles websocket connections for real-time communication.",
+                "tags": [
+                    "websocket"
+                ],
+                "summary": "Handle websocket connection",
+                "responses": {}
+            }
         }
     },
     "definitions": {

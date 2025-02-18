@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/charmbracelet/log"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -17,6 +18,22 @@ type Config struct {
 }
 
 func LoadConfig() (config Config) {
+	// Test environment
+	if err := godotenv.Load(); err != nil {
+		log.Warn("No .env file found.")
+	} else {
+		return Config{
+			DBHost:           os.Getenv("DB_HOST"),
+			DBUser:           os.Getenv("DB_USER"),
+			DBPassword:       os.Getenv("DB_PASS"),
+			DBName:           os.Getenv("DB_NAME"),
+			JWTSecret:        os.Getenv("JWT_SECRET"),
+			MailerSendAPIKey: os.Getenv("MAILERSEND_API_KEY"),
+			EmailTemplateID:  os.Getenv("EMAIL_TEMPLATE_ID"),
+		}
+	}
+
+	// Production environment
 	config = Config{
 		DBHost:           os.Getenv("DB_HOST"),
 		DBUser:           os.Getenv("DB_USER"),
