@@ -53,8 +53,21 @@ definitions:
         example: john_doe
         type: string
     type: object
-  models.User:
+  models.ChatRoomRequest:
+    properties:
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/models.ChatRoomType'
     type: object
+  models.ChatRoomType:
+    enum:
+    - dm
+    - group
+    type: string
+    x-enum-varnames:
+    - DirectMessageRoom
+    - GroupChatRoom
   utils.ErrorResponse:
     properties:
       message:
@@ -73,6 +86,15 @@ definitions:
       success:
         example: true
         type: boolean
+    type: object
+  utils.UpdateUserRequest:
+    properties:
+      image_url:
+        example: https://example.com/profile_picture.jpg
+        type: string
+      username:
+        example: john_doe
+        type: string
     type: object
 host: api.yapchat.xyz
 info:
@@ -233,6 +255,36 @@ paths:
       summary: Verify email address
       tags:
       - auth
+  /v1/chatrooms:
+    post:
+      consumes:
+      - application/json
+      description: Create a new chat room
+      parameters:
+      - description: Chat room info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChatRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Create a new chat room
+      tags:
+      - chatrooms
   /v1/user:
     delete:
       description: Delete the currently authenticated user's profile
@@ -291,7 +343,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.User'
+          $ref: '#/definitions/utils.UpdateUserRequest'
       produces:
       - application/json
       responses:

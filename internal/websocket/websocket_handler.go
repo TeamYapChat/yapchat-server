@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/charmbracelet/log"
@@ -20,9 +21,12 @@ var upgrader = websocket.Upgrader{
 }
 
 var (
-	clients   = make(map[*websocket.Conn]bool) // connected clients
-	broadcast = make(chan Message)             // broadcast channel
-	mutex     sync.Mutex                       // to protect clients map
+	clients   = make(map[uint]map[*websocket.Conn]bool) // connected clients per room
+	broadcast = make(chan struct {
+		RoomID  uint
+		Message Message
+	}) // broadcast channel with RoomID
+	mutex sync.Mutex // to protect clients map
 )
 
 type Message struct {
@@ -44,6 +48,25 @@ func WebSocketHandler(c *gin.Context) {
 		return
 	}
 
+	roomIDStr := c.Query("room_id")
+	if roomIDStr == "" {
+		c.JSON(
+			http.StatusBadRequest,
+			utils.NewErrorResponse("room_id query parameter is required"),
+		)
+		return
+	}
+
+	roomIDUint64, err := strconv.ParseUint(roomIDStr, 10, 32)
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			utils.NewErrorResponse("invalid room_id format"),
+		)
+		return
+	}
+	roomID := uint(roomIDUint64)
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Error("Failed to upgrade connection", "err", err)
@@ -52,15 +75,21 @@ func WebSocketHandler(c *gin.Context) {
 	defer conn.Close()
 
 	mutex.Lock()
-	clients[conn] = true // Register new client
+	if _, ok := clients[roomID]; !ok {
+		clients[roomID] = make(map[*websocket.Conn]bool)
+	}
+	clients[roomID][conn] = true // Register new client for room
 	mutex.Unlock()
 	defer func() {
 		mutex.Lock()
-		delete(clients, conn) // Unregister client when connection closes
+		delete(clients[roomID], conn) // Unregister client when connection closes
+		if len(clients[roomID]) == 0 {
+			delete(clients, roomID) // Remove room if no clients left
+		}
 		mutex.Unlock()
 	}()
 
-	log.Info("Client connected", "id", userID.(uint))
+	log.Info("Client connected", "id", userID.(uint), "roomID", roomID)
 
 	for {
 		var msg Message
@@ -72,23 +101,29 @@ func WebSocketHandler(c *gin.Context) {
 
 		log.Debug("Received message", "msg", msg)
 
-		broadcast <- msg
+		broadcast <- struct {
+			RoomID  uint
+			Message Message
+		}{
+			RoomID:  roomID,
+			Message: msg,
+		}
 	}
 }
 
 func StartBroadcaster() {
 	for {
-		msg := <-broadcast
+		broadcastMsg := <-broadcast
 
 		mutex.Lock()
-		for client := range clients {
-			err := client.WriteJSON(msg)
-			if err != nil {
-				log.Error("Error broadcasting message to client", "err", err)
-				client.Close()
-				mutex.Unlock()
-				delete(clients, client)
-				mutex.Lock()
+		if roomClients, ok := clients[broadcastMsg.RoomID]; ok {
+			for client := range roomClients {
+				err := client.WriteJSON(broadcastMsg.Message)
+				if err != nil {
+					log.Error("Error broadcasting message to client", "err", err)
+					client.Close()
+					delete(roomClients, client) // Remove client from roomClients map
+				}
 			}
 		}
 		mutex.Unlock()

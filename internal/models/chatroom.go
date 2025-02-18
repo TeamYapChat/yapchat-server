@@ -11,7 +11,12 @@ const (
 
 type ChatRoom struct {
 	gorm.Model
-	Name         string       `json:"name"`
-	Type         ChatRoomType `json:"type" gorm:"type:enum('dm', 'group');default:'dm'"`
-	Participants []*User      `            gorm:"many2many:chat_room_participants;"`
+	Name         string
+	Type         ChatRoomType `gorm:"type:enum('dm', 'group');default:'dm'"`
+	Participants []*User      `gorm:"many2many:chat_room_participants;"`
+}
+
+type ChatRoomRequest struct {
+	Name string       `json:"name"`
+	Type ChatRoomType `json:"type"`
 }

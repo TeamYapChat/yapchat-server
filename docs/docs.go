@@ -255,6 +255,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/chatrooms": {
+            "post": {
+                "description": "Create a new chat room",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chatrooms"
+                ],
+                "summary": "Create a new chat room",
+                "parameters": [
+                    {
+                        "description": "Chat room info",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ChatRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/user": {
             "get": {
                 "security": [
@@ -327,7 +373,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/utils.UpdateUserRequest"
                         }
                     }
                 ],
@@ -491,8 +537,27 @@ const docTemplate = `{
                 }
             }
         },
-        "models.User": {
-            "type": "object"
+        "models.ChatRoomRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/models.ChatRoomType"
+                }
+            }
+        },
+        "models.ChatRoomType": {
+            "type": "string",
+            "enum": [
+                "dm",
+                "group"
+            ],
+            "x-enum-varnames": [
+                "DirectMessageRoom",
+                "GroupChatRoom"
+            ]
         },
         "utils.ErrorResponse": {
             "type": "object",
@@ -518,6 +583,19 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "utils.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "image_url": {
+                    "type": "string",
+                    "example": "https://example.com/profile_picture.jpg"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john_doe"
                 }
             }
         }

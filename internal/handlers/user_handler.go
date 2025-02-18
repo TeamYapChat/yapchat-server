@@ -68,7 +68,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 // @Security     ApiKeyAuth
 // @Accept       json
 // @Produce      json
-// @Param        request body models.User true "User details to update"
+// @Param        request body utils.UpdateUserRequest true "User details to update"
 // @Success      200  {object}  utils.SuccessResponse{data=UserResponse}
 // @Failure      400  {object}  utils.ErrorResponse
 // @Failure      401  {object}  utils.ErrorResponse

@@ -63,7 +63,6 @@ func main() {
 	log.Info("Successfully initialized database")
 
 	userRepo := repositories.NewUserRepository(db)
-
 	mailer := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
 
 	router := gin.Default()
@@ -82,9 +81,11 @@ func main() {
 		public.POST("/login", authHandler.LoginHandler)
 		public.POST("/send-verification-email", authHandler.SendEmailHandler)
 	}
+
 	protected := router.Group("/v1")
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
+		// User routes
 		userService := services.NewUserService(userRepo)
 		userHandler := handlers.NewUserHandler(userService)
 
@@ -92,7 +93,15 @@ func main() {
 		protected.POST("/user", userHandler.UpdateUser)
 		protected.DELETE("/user", userHandler.DeleteUser)
 
+		// Websocket routes
 		protected.GET("/ws", websocket.WebSocketHandler)
+
+		chatroomRepo := repositories.NewChatRoomRepository(db)
+		chatroomService := services.NewChatRoomService(chatroomRepo)
+
+		chatroomHandler := handlers.NewChatRoomHandler(chatroomService)
+
+		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
 	}
 
 	router.Run(":8080")
