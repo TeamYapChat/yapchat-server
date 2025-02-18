@@ -76,7 +76,7 @@ func (h *ChatRoomHandler) GetChatRoomByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid chat room ID"))
 		return
 	}
-	id := uint(idUint64) // Convert uint64 to uint
+	id := uint(idUint64)
 
 	chatroom, err := h.service.GetChatRoomByID(id)
 	if err != nil {
@@ -95,4 +95,31 @@ func (h *ChatRoomHandler) GetChatRoomByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// ListChatRooms godoc
+// @Summary      List all chat rooms
+// @Description  Get a list of all chat rooms
+// @Tags         chatrooms
+// @Produce      json
+// @Success      200 {array} ChatRoomResponse
+// @Failure      500 {object} utils.ErrorResponse
+// @Router       /v1/chatrooms [get]
+func (h *ChatRoomHandler) ListChatRooms(c *gin.Context) {
+	chatrooms, err := h.service.ListChatRooms()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to list chat rooms"))
+		return
+	}
+
+	var responses []ChatRoomResponse
+	for _, chatroom := range chatrooms {
+		responses = append(responses, ChatRoomResponse{
+			ID:   chatroom.ID,
+			Name: chatroom.Name,
+			Type: string(chatroom.Type),
+		})
+	}
+
+	c.JSON(http.StatusOK, responses)
 }

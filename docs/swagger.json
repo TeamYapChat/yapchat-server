@@ -249,6 +249,33 @@
             }
         },
         "/v1/chatrooms": {
+            "get": {
+                "description": "Get a list of all chat rooms",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chatrooms"
+                ],
+                "summary": "List all chat rooms",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.ChatRoomResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new chat room",
                 "consumes": [

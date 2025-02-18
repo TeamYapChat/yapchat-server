@@ -101,6 +101,7 @@ func main() {
 
 		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
 		protected.GET("/chatrooms/:id", chatroomHandler.GetChatRoomByID)
+		protected.GET("/chatrooms", chatroomHandler.ListChatRooms)
 
 		// Websocket routes
 		protected.GET("/ws", websocket.WebSocketHandler)
