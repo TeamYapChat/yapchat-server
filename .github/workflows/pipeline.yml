@@ -1,4 +1,4 @@
-name: Build and Publish
+name: Build, Push, and Deploy
 on:
  push:
    branches:
@@ -41,3 +41,10 @@ jobs:
             ghcr.io/teamyapchat/yapchat-server:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Dokploy Deployment
+        uses: benbristow/dokploy-deploy-action@0.0.1
+        with:
+          auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+          application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
+          dokploy_url: ${{ secrets.DOKPLOY_URL }}
