@@ -42,6 +42,9 @@ func LoadConfig() Config {
 	if config.AppEnv == "prod" {
 		config.DBPassword = getSecret("DB_PASS_FILE")
 		config.MailerSendAPIKey = getSecret("MAILERSEND_API_KEY_FILE")
+	} else {
+		config.DBPassword = os.Getenv("DB_PASS")
+		config.MailerSendAPIKey = os.Getenv("MAILERSEND_API_KEY")
 	}
 
 	return config
