@@ -42,15 +42,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Trigger Dokploy Deployment
-        run: |
-            curl -v -X 'POST' \
-            '${{ secrets.DOKPLOY_URL }}/api/trpc/application.deploy' \
-            -H 'accept: application/json' \
-            -H 'Authorization: Bearer ${{ secrets.DOKPLOY_AUTH_TOKEN }}' \
-            -H 'Content-Type: application/json' \
-            -d '{
-                "json":{
-                    "applicationId": "${{ secrets.DOKPLOY_APPLICATION_ID }}"
-                }
-            }'
+      - name: Dokploy Deployment
+        uses: benbristow/dokploy-deploy-action@0.0.1
+        with:
+          auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+          application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
+          dokploy_url: ${{ secrets.DOKPLOY_URL }}
