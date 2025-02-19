@@ -82,7 +82,7 @@ func (h *AuthHandler) RegisterHandler(c *gin.Context) {
 				"email",
 				req.Email,
 				"err",
-				err,
+				err.Error(),
 			)
 		}
 

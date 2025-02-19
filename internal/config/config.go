@@ -52,7 +52,7 @@ func getSecret(envName string) string {
 
 	data, err := os.ReadFile(secretPath)
 	if err != nil {
-		log.Fatal("Environment variable not set", "env", secretPath, "err", err)
+		log.Fatal("Environment variable not set", "env", envName, "err", err.Error())
 	}
 
 	return string(data)

@@ -69,7 +69,7 @@ func WebSocketHandler(c *gin.Context) {
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Error("Failed to upgrade connection", "err", err)
+		log.Error("Failed to upgrade connection", "err", err.Error())
 		return
 	}
 	defer conn.Close()
@@ -95,7 +95,7 @@ func WebSocketHandler(c *gin.Context) {
 		var msg Message
 		err := conn.ReadJSON(&msg)
 		if err != nil {
-			log.Error("Error reading json message", "id", userID.(uint), "err", err)
+			log.Error("Error reading json message", "id", userID.(uint), "err", err.Error())
 			break
 		}
 
@@ -120,7 +120,7 @@ func StartBroadcaster() {
 			for client := range roomClients {
 				err := client.WriteJSON(broadcastMsg.Message)
 				if err != nil {
-					log.Error("Error broadcasting message to client", "err", err)
+					log.Error("Error broadcasting message to client", "err", err.Error())
 					client.Close()
 					delete(roomClients, client) // Remove client from roomClients map
 				}

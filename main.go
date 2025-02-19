@@ -58,7 +58,7 @@ func main() {
 
 	db, err := InitDB(cfg)
 	if err != nil {
-		log.Fatal("Failed to initialize database", "err", err)
+		log.Fatal("Failed to initialize database", "err", err.Error())
 	}
 	log.Info("Successfully initialized database")
 
