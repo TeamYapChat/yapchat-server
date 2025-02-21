@@ -24,10 +24,12 @@ func LoadConfig() Config {
 
 	config.AppEnv = strings.ToLower(os.Getenv("APP_ENV"))
 	if config.AppEnv == "" {
-		config.AppEnv = "prod" // Default to prod
+		config.AppEnv = "test" // Default to test
 	}
 
 	if config.AppEnv == "dev" || config.AppEnv == "test" {
+		log.SetLevel(log.DebugLevel)
+
 		if err := godotenv.Load(); err != nil {
 			log.Warn("No .env file found. Using environment variables directly.")
 		}
