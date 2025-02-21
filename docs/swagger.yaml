@@ -5,6 +5,10 @@ definitions:
         type: integer
       name:
         type: string
+      participant_ids:
+        items:
+          type: integer
+        type: array
       type:
         type: string
     type: object
@@ -66,6 +70,10 @@ definitions:
     properties:
       name:
         type: string
+      participant_ids:
+        items:
+          type: integer
+        type: array
       type:
         $ref: '#/definitions/models.ChatRoomType'
     type: object

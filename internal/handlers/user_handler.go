@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/charmbracelet/log"
 	"github.com/gin-gonic/gin"
 
 	"github.com/teamyapchat/yapchat-server/internal/services"
@@ -44,6 +45,8 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		)
 		return
 	}
+
+	log.Debug("Current user ID", "userID", userID.(uint))
 
 	user, err := h.userService.GetUserByID(userID.(uint))
 	if err != nil {

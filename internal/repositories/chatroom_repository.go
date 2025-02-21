@@ -27,7 +27,7 @@ func (r *ChatRoomRepository) GetByID(id uint) (*models.ChatRoom, error) {
 	return &chatroom, nil
 }
 
-func (r *ChatRoomRepository) List() ([]*models.ChatRoom, error) {
+func (r *ChatRoomRepository) List(userID uint) ([]*models.ChatRoom, error) {
 	var chatrooms []*models.ChatRoom
 	err := r.db.Preload("Participants").Find(&chatrooms).Error
 	if err != nil {

@@ -95,7 +95,7 @@ func main() {
 
 		// Chatroom routes
 		chatroomRepo := repositories.NewChatRoomRepository(db)
-		chatroomService := services.NewChatRoomService(chatroomRepo)
+		chatroomService := services.NewChatRoomService(chatroomRepo, userRepo)
 
 		chatroomHandler := handlers.NewChatRoomHandler(chatroomService)
 

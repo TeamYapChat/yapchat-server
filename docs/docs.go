@@ -544,6 +544,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "participant_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "type": {
                     "type": "string"
                 }
@@ -630,6 +636,12 @@ const docTemplate = `{
             "properties": {
                 "name": {
                     "type": "string"
+                },
+                "participant_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "type": {
                     "$ref": "#/definitions/models.ChatRoomType"

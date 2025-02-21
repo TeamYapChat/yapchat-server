@@ -22,9 +22,10 @@ func NewChatRoomHandler(service *services.ChatRoomService) *ChatRoomHandler {
 
 // ChatRoomResponse defines the response structure for chat room related API calls
 type ChatRoomResponse struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
+	ID             uint   `json:"id"`
+	Name           string `json:"name"`
+	Type           string `json:"type"`
+	ParticipantIDs []uint `json:"participant_ids"`
 }
 
 // CreateChatRoom godoc
@@ -39,18 +40,21 @@ type ChatRoomResponse struct {
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms [post]
 func (h *ChatRoomHandler) CreateChatRoom(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
+		return
+	}
+
 	var chatroomRequest models.ChatRoomRequest
 	if err := c.ShouldBindJSON(&chatroomRequest); err != nil {
 		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid request body"))
 		return
 	}
 
-	chatroom := models.ChatRoom{
-		Name: chatroomRequest.Name,
-		Type: chatroomRequest.Type,
-	}
+	chatroomRequest.ParticipantIDs = append(chatroomRequest.ParticipantIDs, userID.(uint))
 
-	if err := h.service.CreateChatRoom(&chatroom); err != nil {
+	if err := h.service.CreateChatRoom(&chatroomRequest); err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to create chat room"))
 		return
 	}
@@ -88,10 +92,18 @@ func (h *ChatRoomHandler) GetChatRoomByID(c *gin.Context) {
 		return
 	}
 
+	var userIDList []uint
+	if chatroom.Participants != nil {
+		for _, participant := range chatroom.Participants {
+			userIDList = append(userIDList, participant.ID)
+		}
+	}
+
 	response := ChatRoomResponse{
-		ID:   chatroom.ID,
-		Name: chatroom.Name,
-		Type: string(chatroom.Type),
+		ID:             chatroom.ID,
+		Name:           chatroom.Name,
+		Type:           string(chatroom.Type),
+		ParticipantIDs: userIDList,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -106,7 +118,13 @@ func (h *ChatRoomHandler) GetChatRoomByID(c *gin.Context) {
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms [get]
 func (h *ChatRoomHandler) ListChatRooms(c *gin.Context) {
-	chatrooms, err := h.service.ListChatRooms()
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
+		return
+	}
+
+	chatrooms, err := h.service.ListChatRooms(userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to list chat rooms"))
 		return
@@ -114,10 +132,18 @@ func (h *ChatRoomHandler) ListChatRooms(c *gin.Context) {
 
 	var responses []ChatRoomResponse
 	for _, chatroom := range chatrooms {
+		var userIDList []uint
+		if chatroom.Participants != nil {
+			for _, participant := range chatroom.Participants {
+				userIDList = append(userIDList, participant.ID)
+			}
+		}
+
 		responses = append(responses, ChatRoomResponse{
-			ID:   chatroom.ID,
-			Name: chatroom.Name,
-			Type: string(chatroom.Type),
+			ID:             chatroom.ID,
+			Name:           chatroom.Name,
+			Type:           string(chatroom.Type),
+			ParticipantIDs: userIDList,
 		})
 	}
 

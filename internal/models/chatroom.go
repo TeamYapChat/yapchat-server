@@ -17,6 +17,7 @@ type ChatRoom struct {
 }
 
 type ChatRoomRequest struct {
-	Name string       `json:"name"`
-	Type ChatRoomType `json:"type"`
+	Name           string       `json:"name,omitempty"`
+	Type           ChatRoomType `json:"type"`
+	ParticipantIDs []uint       `json:"participant_ids,omitempty"`
 }
