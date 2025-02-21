@@ -15,11 +15,11 @@ func NewUserService(userRepo repositories.UserRepository) *UserService {
 }
 
 func (s *UserService) GetUserByID(id uint) (*models.User, error) {
-	return s.userRepo.FindUserByID(id)
+	return s.userRepo.FindByID(id)
 }
 
 func (s *UserService) UpdateUser(id uint, data utils.UpdateUserRequest) (*models.User, error) {
-	user, err := s.userRepo.FindUserByID(id)
+	user, err := s.userRepo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -31,10 +31,10 @@ func (s *UserService) UpdateUser(id uint, data utils.UpdateUserRequest) (*models
 		user.ImageURL = data.ImageURL
 	}
 
-	err = s.userRepo.UpdateUser(user)
+	err = s.userRepo.Update(user)
 	return user, err
 }
 
 func (s *UserService) DeleteUser(id uint) error {
-	return s.userRepo.DeleteUser(id)
+	return s.userRepo.Delete(id)
 }

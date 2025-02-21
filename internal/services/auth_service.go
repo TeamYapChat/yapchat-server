@@ -33,7 +33,7 @@ func NewAuthService(
 }
 
 func (s *AuthService) Register(user *models.User) error {
-	_, err := s.userRepo.FindUserByEmail(user.Email)
+	_, err := s.userRepo.FindByEmail(user.Email)
 	if err == nil {
 		return errors.New("user already exists")
 	}
@@ -41,7 +41,7 @@ func (s *AuthService) Register(user *models.User) error {
 	user.VerificationCode = generateVerificationCode()
 	user.IsVerified = false
 
-	if err := s.userRepo.CreateUser(user); err != nil {
+	if err := s.userRepo.Create(user); err != nil {
 		return err
 	}
 
@@ -52,9 +52,9 @@ func (s *AuthService) Login(emailOrUsername, password string) (string, error) {
 	var user *models.User
 	var err error
 
-	user, err = s.userRepo.FindUserByEmail(emailOrUsername)
+	user, err = s.userRepo.FindByEmail(emailOrUsername)
 	if err != nil {
-		user, err = s.userRepo.FindUserByUsername(emailOrUsername)
+		user, err = s.userRepo.FindByUsername(emailOrUsername)
 		if err != nil {
 			return "", errors.New("invalid credentials")
 		}
@@ -73,7 +73,7 @@ func (s *AuthService) Login(emailOrUsername, password string) (string, error) {
 }
 
 func (s *AuthService) SendVerificationEmail(id uint) error {
-	user, err := s.userRepo.FindUserByID(id)
+	user, err := s.userRepo.FindByID(id)
 	if err != nil {
 		return errors.New("user not found")
 	}
@@ -91,7 +91,7 @@ func (s *AuthService) SendVerificationEmail(id uint) error {
 }
 
 func (s *AuthService) VerifyEmail(code string) error {
-	user, err := s.userRepo.FindUserByVerificationCode(code)
+	user, err := s.userRepo.FindByVerificationCode(code)
 	if err != nil {
 		return errors.New("user not found")
 	}
@@ -103,7 +103,7 @@ func (s *AuthService) VerifyEmail(code string) error {
 	user.IsVerified = true
 	user.VerificationCode = ""
 
-	if err := s.userRepo.UpdateUser(user); err != nil {
+	if err := s.userRepo.Update(user); err != nil {
 		return err
 	}
 

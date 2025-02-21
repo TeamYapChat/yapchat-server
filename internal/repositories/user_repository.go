@@ -7,13 +7,13 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(user *models.User) error
-	UpdateUser(user *models.User) error
-	FindUserByID(id uint) (*models.User, error)
-	FindUserByEmail(email string) (*models.User, error)
-	FindUserByUsername(username string) (*models.User, error)
-	FindUserByVerificationCode(code string) (*models.User, error)
-	DeleteUser(id uint) error
+	Create(user *models.User) error
+	Update(user *models.User) error
+	FindByID(id uint) (*models.User, error)
+	FindByEmail(email string) (*models.User, error)
+	FindByUsername(username string) (*models.User, error)
+	FindByVerificationCode(code string) (*models.User, error)
+	Delete(id uint) error
 }
 
 type MySQLUserRepository struct {
@@ -24,42 +24,42 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &MySQLUserRepository{db: db}
 }
 
-func (r *MySQLUserRepository) CreateUser(user *models.User) error {
+func (r *MySQLUserRepository) Create(user *models.User) error {
 	return r.db.Create(user).Error
 }
 
-func (r *MySQLUserRepository) UpdateUser(user *models.User) error {
+func (r *MySQLUserRepository) Update(user *models.User) error {
 	return r.db.Save(user).Error
 }
 
-func (r *MySQLUserRepository) FindUserByID(id uint) (*models.User, error) {
+func (r *MySQLUserRepository) FindByID(id uint) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("id = ?", id).First(&user).Error
 
 	return &user, err
 }
 
-func (r *MySQLUserRepository) FindUserByEmail(email string) (*models.User, error) {
+func (r *MySQLUserRepository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("email = ?", email).First(&user).Error
 
 	return &user, err
 }
 
-func (r *MySQLUserRepository) FindUserByUsername(username string) (*models.User, error) {
+func (r *MySQLUserRepository) FindByUsername(username string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("username = ?", username).First(&user).Error
 
 	return &user, err
 }
 
-func (r *MySQLUserRepository) FindUserByVerificationCode(code string) (*models.User, error) {
+func (r *MySQLUserRepository) FindByVerificationCode(code string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("verification_code = ?", code).First(&user).Error
 	return &user, err
 }
 
-func (r *MySQLUserRepository) DeleteUser(id uint) error {
+func (r *MySQLUserRepository) Delete(id uint) error {
 	var user models.User
 	err := r.db.Where("id = ?", id).Delete(&user).Error
 
