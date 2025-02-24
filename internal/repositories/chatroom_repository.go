@@ -29,7 +29,10 @@ func (r *ChatRoomRepository) GetByID(id uint) (*models.ChatRoom, error) {
 
 func (r *ChatRoomRepository) List(userID uint) ([]*models.ChatRoom, error) {
 	var chatrooms []*models.ChatRoom
-	err := r.db.Preload("Participants").Find(&chatrooms).Error
+	err := r.db.Preload("Participants").
+		Joins("JOIN chat_room_participants ON chat_rooms.id = chat_room_participants.chat_room_id").
+		Where("chat_room_participants.user_id = ?", userID).
+		Find(&chatrooms).Error
 	if err != nil {
 		return nil, err
 	}
