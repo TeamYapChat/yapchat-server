@@ -40,6 +40,8 @@ type VerifyEmailRequest struct {
 	Code string `form:"code" binding:"required"`
 }
 
+const domain string = ".yapchat.xyz"
+
 // RegisterHandler godoc
 // @Summary      Register new user
 // @Description  Create a new user account
@@ -155,7 +157,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		accessToken,
 		1800, // 30 minutes
 		"/",
-		"yapchat.xyz",
+		domain,
 		true, // Secure
 		true, // HttpOnly
 	)
@@ -166,7 +168,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		refreshToken,
 		7*24*3600, // 7 days
 		"/",
-		"yapchat.xyz",
+		domain,
 		true, // Secure
 		true, // HttpOnly
 	)
@@ -321,7 +323,7 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		accessTokenString,
 		1800, // 30 minutes
 		"/",
-		"yapchat.xyz",
+		domain,
 		true, // Secure
 		true, // HttpOnly
 	)
@@ -333,7 +335,7 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 			newRefreshTokenValue,
 			7*24*3600, // 7 days
 			"/",
-			"yapchat.xyz",
+			domain,
 			true, // Secure
 			true, // HttpOnly
 		)
