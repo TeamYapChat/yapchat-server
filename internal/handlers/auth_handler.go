@@ -151,6 +151,8 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
+	c.SetSameSite(http.SameSiteNoneMode)
+
 	// Set access token cookie
 	c.SetCookie(
 		"access_token",
@@ -316,6 +318,8 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		})
 		return
 	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
 
 	// Set new access token cookie
 	c.SetCookie(
