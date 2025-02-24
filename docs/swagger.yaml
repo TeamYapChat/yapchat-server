@@ -127,7 +127,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Login with email or username and password to receive JWT token
+      description: Login with email or username and password. Access and refresh tokens
+        are returned as HttpOnly cookies.
       parameters:
       - description: User credentials
         in: body
@@ -139,14 +140,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Successful login. Access and refresh tokens are in HttpOnly
+            cookies.
           schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponse'
-            - properties:
-                data:
-                  type: string
-              type: object
+            $ref: '#/definitions/utils.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -160,6 +157,29 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Authenticate user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      description: Handles refresh token logic to issue new access and refresh tokens.
+        New access and refresh tokens are returned as HttpOnly cookies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful token refresh. New access and refresh tokens are
+            in HttpOnly cookies.
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Refresh access and refresh tokens
       tags:
       - auth
   /auth/register:

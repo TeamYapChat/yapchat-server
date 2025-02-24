@@ -105,12 +105,12 @@ func (h *AuthHandler) RegisterHandler(c *gin.Context) {
 
 // LoginHandler godoc
 // @Summary      Authenticate user
-// @Description  Login with email or username and password to receive JWT token
+// @Description  Login with email or username and password. Access and refresh tokens are returned as HttpOnly cookies.
 // @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        input body LoginRequest true "User credentials"
-// @Success      200  {object}  utils.SuccessResponse{data=string}
+// @Success      200 {object} utils.SuccessResponse "Successful login. Access and refresh tokens are in HttpOnly cookies."
 // @Failure      400  {object}  utils.ErrorResponse
 // @Failure      401  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
@@ -125,13 +125,14 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	var token string
+	var accessToken string
+	var refreshToken string
 	var err error
 
 	if req.Email != "" {
-		token, err = h.authService.Login(req.Email, req.Password)
+		accessToken, refreshToken, err = h.authService.Login(req.Email, req.Password)
 	} else if req.Username != "" {
-		token, err = h.authService.Login(req.Username, req.Password)
+		accessToken, refreshToken, err = h.authService.Login(req.Username, req.Password)
 	} else {
 		c.JSON(
 			http.StatusBadRequest,
@@ -148,10 +149,31 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
+	// Set access token cookie
+	c.SetCookie(
+		"access_token",
+		accessToken,
+		1800, // 30 minutes
+		"/",
+		"yapchat.xyz",
+		true, // Secure
+		true, // HttpOnly
+	)
+
+	// Set refresh token cookie
+	c.SetCookie(
+		"refresh_token",
+		refreshToken,
+		7*24*3600, // 7 days
+		"/",
+		"yapchat.xyz",
+		true, // Secure
+		true, // HttpOnly
+	)
+
 	c.JSON(http.StatusOK, utils.SuccessResponse{
 		Success: true,
 		Message: "Login successful",
-		Data:    token,
 	})
 }
 
@@ -257,5 +279,68 @@ func (h *AuthHandler) VerifyEmailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessResponse{
 		Success: true,
 		Message: "Email verified successfully",
+	})
+}
+
+// RefreshTokenHandler godoc
+// @Summary      Refresh access and refresh tokens
+// @Description  Handles refresh token logic to issue new access and refresh tokens. New access and refresh tokens are returned as HttpOnly cookies.
+// @Tags         auth
+// @Produce      json
+// @Success      200 {object} utils.SuccessResponse "Successful token refresh. New access and refresh tokens are in HttpOnly cookies."
+// @Failure      401 {object} utils.ErrorResponse
+// @Failure      500 {object} utils.ErrorResponse
+// @Router       /auth/refresh [post]
+func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
+	refreshTokenCookie, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, utils.ErrorResponse{
+			Success: false,
+			Message: "Refresh token cookie not found",
+		})
+		return
+	}
+
+	accessTokenString, newRefreshTokenValue, err := h.authService.RefreshToken(refreshTokenCookie)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "invalid refresh token" || err.Error() == "refresh token expired" ||
+			err.Error() == "refresh token revoked" {
+			statusCode = http.StatusUnauthorized
+		}
+		c.JSON(statusCode, utils.ErrorResponse{
+			Success: false,
+			Message: "Failed to refresh tokens: " + err.Error(),
+		})
+		return
+	}
+
+	// Set new access token cookie
+	c.SetCookie(
+		"access_token",
+		accessTokenString,
+		1800, // 30 minutes
+		"/",
+		"yapchat.xyz",
+		true, // Secure
+		true, // HttpOnly
+	)
+
+	// Set new refresh token cookie if rotation occurred
+	if newRefreshTokenValue != "" {
+		c.SetCookie(
+			"refresh_token",
+			newRefreshTokenValue,
+			7*24*3600, // 7 days
+			"/",
+			"yapchat.xyz",
+			true, // Secure
+			true, // HttpOnly
+		)
+	}
+
+	c.JSON(http.StatusOK, utils.SuccessResponse{
+		Success: true,
+		Message: "Tokens refreshed successfully",
 	})
 }

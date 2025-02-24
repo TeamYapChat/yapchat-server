@@ -34,7 +34,12 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.ChatRoom{}, &models.Message{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.ChatRoom{},
+		&models.Message{},
+		&models.RefreshToken{},
+	); err != nil {
 		return nil, err
 	}
 
@@ -73,7 +78,8 @@ func main() {
 
 	public := router.Group("/auth")
 	{
-		authService := services.NewAuthService(userRepo, mailer, cfg.JWTSecret)
+		refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
+		authService := services.NewAuthService(userRepo, refreshTokenRepo, mailer, cfg.JWTSecret)
 		authHandler := handlers.NewAuthHandler(authService)
 
 		public.GET("/verify-email", authHandler.VerifyEmailHandler)
@@ -81,6 +87,7 @@ func main() {
 		public.POST("/register", authHandler.RegisterHandler)
 		public.POST("/login", authHandler.LoginHandler)
 		public.POST("/send-verification-email", authHandler.SendEmailHandler)
+		public.POST("/refresh", authHandler.RefreshTokenHandler)
 	}
 
 	protected := router.Group("/v1")

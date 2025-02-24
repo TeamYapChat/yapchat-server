@@ -3,7 +3,7 @@ package utils
 type SuccessResponse struct {
 	Success bool        `json:"success" example:"true"`
 	Message string      `json:"message" example:"success"`
-	Data    interface{} `json:"data"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 type ErrorResponse struct {
