@@ -66,6 +66,7 @@ func main() {
 	mailer := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
 
 	router := gin.Default()
+	router.SetTrustedProxies(nil)
 	router.Use(middleware.CORS())
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
