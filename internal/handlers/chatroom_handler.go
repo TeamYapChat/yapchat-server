@@ -149,3 +149,167 @@ func (h *ChatRoomHandler) ListChatRooms(c *gin.Context) {
 
 	c.JSON(http.StatusOK, responses)
 }
+
+// UpdateChatRoom godoc
+// @Summary      Update chat room by ID
+// @Description  Update chat room by ID
+// @Tags         chatrooms
+// @Accept       json
+// @Produce      json
+// @Param        id path integer true "Chat room ID"
+// @Param        request body models.ChatRoomRequest true "Chat room info"
+// @Success      200 {object} utils.SuccessResponse
+// @Failure      400 {object} utils.ErrorResponse
+// @Failure      404 {object} utils.ErrorResponse
+// @Failure      500 {object} utils.ErrorResponse
+// @Router       /v1/chatrooms/{id} [put]
+func (h *ChatRoomHandler) UpdateChatRoom(c *gin.Context) {
+	idStr := c.Param("id")
+	idUint64, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid chat room ID"))
+		return
+	}
+	id := uint(idUint64)
+
+	var chatroomRequest models.ChatRoomRequest
+	if err := c.ShouldBindJSON(&chatroomRequest); err != nil {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid request body"))
+		return
+	}
+
+	existingChatroom, err := h.service.GetChatRoomByID(id)
+	if err != nil {
+		if errors.Is(err, services.ErrChatRoomNotFound) {
+			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
+		} else {
+			c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to get chat room"))
+		}
+		return
+	}
+
+	existingChatroom.Name = chatroomRequest.Name
+	existingChatroom.Type = chatroomRequest.Type
+
+	if err := h.service.UpdateChatRoom(existingChatroom); err != nil {
+		if errors.Is(err, services.ErrChatRoomNotFound) {
+			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
+		} else {
+			c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to update chat room"))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.NewSuccessResponse("Chat room updated successfully"))
+}
+
+// DeleteChatRoom godoc
+// @Summary      Delete chat room by ID
+// @Description  Delete chat room by ID
+// @Tags         chatrooms
+// @Produce      json
+// @Param        id path integer true "Chat room ID"
+// @Success      200 {object} utils.SuccessResponse
+// @Failure      400 {object} utils.ErrorResponse
+// @Failure      404 {object} utils.ErrorResponse
+// @Failure      500 {object} utils.ErrorResponse
+// @Router       /v1/chatrooms/{id} [delete]
+func (h *ChatRoomHandler) DeleteChatRoom(c *gin.Context) {
+	idStr := c.Param("id")
+	idUint64, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid chat room ID"))
+		return
+	}
+	id := uint(idUint64)
+
+	err = h.service.DeleteChatRoom(id)
+	if err != nil {
+		if errors.Is(err, services.ErrChatRoomNotFound) {
+			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
+		} else {
+			c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to delete chat room"))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.NewSuccessResponse("Chat room deleted successfully"))
+}
+
+// JoinChatRoom godoc
+// @Summary      Join chat room by ID
+// @Description  Join chat room by ID
+// @Tags         chatrooms
+// @Produce      json
+// @Param        id path integer true "Chat room ID"
+// @Success      200 {object} utils.SuccessResponse
+// @Failure      400 {object} utils.ErrorResponse
+// @Failure      404 {object} utils.ErrorResponse
+// @Failure      500 {object} utils.ErrorResponse
+// @Router       /v1/chatrooms/{id}/join [post]
+func (h *ChatRoomHandler) JoinChatRoom(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
+		return
+	}
+
+	idStr := c.Param("id")
+	idUint64, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid chat room ID"))
+		return
+	}
+	chatroomID := uint(idUint64)
+
+	err = h.service.AddParticipantToChatRoom(chatroomID, userID.(uint))
+	if err != nil {
+		if errors.Is(err, services.ErrChatRoomNotFound) {
+			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
+		} else {
+			c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to join chat room"))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.NewSuccessResponse("Successfully joined chat room"))
+}
+
+// LeaveChatRoom godoc
+// @Summary      Leave chat room by ID
+// @Description  Leave chat room by ID
+// @Tags         chatrooms
+// @Produce      json
+// @Param        id path integer true "Chat room ID"
+// @Success      200 {object} utils.SuccessResponse
+// @Failure      400 {object} utils.ErrorResponse
+// @Failure      404 {object} utils.ErrorResponse
+// @Failure      500 {object} utils.ErrorResponse
+// @Router       /v1/chatrooms/{id}/leave [post]
+func (h *ChatRoomHandler) LeaveChatRoom(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
+		return
+	}
+
+	idStr := c.Param("id")
+	idUint64, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid chat room ID"))
+		return
+	}
+	chatroomID := uint(idUint64)
+
+	err = h.service.RemoveParticipantFromChatRoom(chatroomID, userID.(uint))
+	if err != nil {
+		if errors.Is(err, services.ErrChatRoomNotFound) {
+			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
+		} else {
+			c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to leave chat room"))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.NewSuccessResponse("Successfully left chat room"))
+}

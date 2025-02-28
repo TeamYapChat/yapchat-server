@@ -109,7 +109,7 @@ func main() {
 		userHandler := handlers.NewUserHandler(userService)
 
 		protected.GET("/user", userHandler.GetUser)
-		protected.POST("/user", userHandler.UpdateUser)
+		protected.PUT("/user", userHandler.UpdateUser)
 		protected.DELETE("/user", userHandler.DeleteUser)
 
 		// Chatroom routes
@@ -121,6 +121,10 @@ func main() {
 		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
 		protected.GET("/chatrooms/:id", chatroomHandler.GetChatRoomByID)
 		protected.GET("/chatrooms", chatroomHandler.ListChatRooms)
+		protected.PUT("/chatrooms/:id", chatroomHandler.UpdateChatRoom)
+		protected.DELETE("/chatrooms/:id", chatroomHandler.DeleteChatRoom)
+		protected.POST("/chatrooms/:id/join", chatroomHandler.JoinChatRoom)
+		protected.POST("/chatrooms/:id/leave", chatroomHandler.LeaveChatRoom)
 
 		// Websocket routes
 		protected.GET("/ws", websocket.WebSocketHandler)
