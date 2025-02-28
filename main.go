@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"os/signal"
+	"syscall"
 
 	"github.com/charmbracelet/log"
-	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/graceful"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/mysql"
@@ -70,7 +73,15 @@ func main() {
 	userRepo := repositories.NewUserRepository(db)
 	mailer := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
 
-	router := gin.Default()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	router, err := graceful.Default()
+	if err != nil {
+		log.Fatal("Failed to create router", "err", err.Error())
+	}
+	defer router.Close()
+
 	router.SetTrustedProxies(nil)
 	router.Use(middleware.CORS())
 
@@ -115,5 +126,8 @@ func main() {
 		protected.GET("/ws", websocket.WebSocketHandler)
 	}
 
-	router.Run(":8080")
+	// Run on :8080 by default
+	if err := router.RunWithContext(ctx); err != nil && err == context.Canceled {
+		log.Fatal("Shutting down server", "err", err.Error())
+	}
 }
