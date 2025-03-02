@@ -52,13 +52,13 @@ func (s *AuthService) Register(user *models.User) error {
 	return nil
 }
 
-func (s *AuthService) Login(emailOrUsername, password string) (string, string, error) {
+func (s *AuthService) Login(login, password string) (string, string, error) {
 	var user *models.User
 	var err error
 
-	user, err = s.UserRepo.FindByEmail(emailOrUsername)
+	user, err = s.UserRepo.FindByEmail(login)
 	if err != nil {
-		user, err = s.UserRepo.FindByUsername(emailOrUsername)
+		user, err = s.UserRepo.FindByUsername(login)
 		if err != nil {
 			return "", "", errors.New("invalid credentials")
 		}

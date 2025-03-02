@@ -27,9 +27,8 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"    binding:"omitempty,email" example:"john@example.com"`
-	Username string `json:"username" binding:"omitempty"       example:"john_doe"`
-	Password string `json:"password" binding:"required"        example:"password123"`
+	Login    string `json:"login"    binding:"required" example:"john@example.com"`
+	Password string `json:"password" binding:"required" example:"password123"`
 }
 
 type SendEmailRequest struct {
@@ -127,22 +126,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	var accessToken string
-	var refreshToken string
-	var err error
-
-	if req.Email != "" {
-		accessToken, refreshToken, err = h.authService.Login(req.Email, req.Password)
-	} else if req.Username != "" {
-		accessToken, refreshToken, err = h.authService.Login(req.Username, req.Password)
-	} else {
-		c.JSON(
-			http.StatusBadRequest,
-			utils.ErrorResponse{Success: false, Message: "Email or Username is required"},
-		)
-		return
-	}
-
+	accessToken, refreshToken, err := h.authService.Login(req.Login, req.Password)
 	if err != nil {
 		c.JSON(
 			http.StatusUnauthorized,
