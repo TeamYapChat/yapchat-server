@@ -774,20 +774,17 @@ const docTemplate = `{
         "handlers.LoginRequest": {
             "type": "object",
             "required": [
+                "login",
                 "password"
             ],
             "properties": {
-                "email": {
+                "login": {
                     "type": "string",
                     "example": "john@example.com"
                 },
                 "password": {
                     "type": "string",
                     "example": "password123"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "john_doe"
                 }
             }
         },

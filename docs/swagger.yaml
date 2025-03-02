@@ -14,16 +14,14 @@ definitions:
     type: object
   handlers.LoginRequest:
     properties:
-      email:
+      login:
         example: john@example.com
         type: string
       password:
         example: password123
         type: string
-      username:
-        example: john_doe
-        type: string
     required:
+    - login
     - password
     type: object
   handlers.RegisterRequest:
