@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -78,6 +79,13 @@ func (s *AuthService) Login(login, password string) (string, string, error) {
 		return "", "", err
 	}
 
+	// Check for existing refresh token and revoke it
+	existingRefreshToken, err := s.RefreshTokenRepo.FindByUserID(user.ID)
+	if err == nil {
+		log.Warn("Valid refresh token found during login", "userID", user.ID)
+		s.RefreshTokenRepo.Revoke(existingRefreshToken)
+	}
+
 	// Generate refresh token
 	refreshTokenValue := uuid.New().String()
 	hashedRefreshToken, err := bcrypt.GenerateFromPassword(
@@ -102,17 +110,14 @@ func (s *AuthService) Login(login, password string) (string, string, error) {
 	return accessTokenString, refreshTokenValue, nil
 }
 
-func (s *AuthService) RefreshToken(refreshTokenValue string) (string, string, error) {
-	hashedRefreshToken, err := bcrypt.GenerateFromPassword(
-		[]byte(refreshTokenValue),
-		bcrypt.DefaultCost,
-	)
+func (s *AuthService) RefreshToken(userID uint, refreshTokenValue string) (string, string, error) {
+	refreshTokenModel, err := s.RefreshTokenRepo.FindByUserID(userID)
 	if err != nil {
+		log.Debug("Refresh token not found", "userID", userID, "err", err)
 		return "", "", errors.New("invalid refresh token")
 	}
 
-	refreshTokenModel, err := s.RefreshTokenRepo.FindByTokenHash(string(hashedRefreshToken))
-	if err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(refreshTokenModel.TokenHash), []byte(refreshTokenValue)); err != nil {
 		return "", "", errors.New("invalid refresh token")
 	}
 
@@ -149,17 +154,16 @@ func (s *AuthService) RefreshToken(refreshTokenValue string) (string, string, er
 		return "", "", err
 	}
 
+	if err := s.RefreshTokenRepo.Revoke(refreshTokenModel); err != nil {
+		return "", "", err
+	}
+
 	// Store new refresh token in database, replace old one
+	refreshTokenModel.ID = 0
 	refreshTokenModel.TokenHash = string(hashedNewRefreshToken)
 	refreshTokenModel.Expiry = time.Now().Add(7 * 24 * time.Hour)
 	refreshTokenModel.RevokedAt = nil
-	err = s.RefreshTokenRepo.Revoke(refreshTokenModel)
-	if err != nil {
-		return "", "", err
-	}
-	refreshTokenModel.ID = 0
-	err = s.RefreshTokenRepo.Create(refreshTokenModel)
-	if err != nil {
+	if err := s.RefreshTokenRepo.Create(refreshTokenModel); err != nil {
 		return "", "", err
 	}
 

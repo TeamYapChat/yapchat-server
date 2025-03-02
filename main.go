@@ -98,7 +98,12 @@ func main() {
 		public.POST("/register", authHandler.RegisterHandler)
 		public.POST("/login", authHandler.LoginHandler)
 		public.POST("/send-verification-email", authHandler.SendEmailHandler)
-		public.POST("/refresh", authHandler.RefreshTokenHandler)
+
+		public.POST(
+			"/refresh",
+			middleware.AuthMiddleware(cfg.JWTSecret),
+			authHandler.RefreshTokenHandler,
+		)
 	}
 
 	protected := router.Group("/v1")

@@ -38,7 +38,7 @@ func (r *refreshTokenRepository) FindByTokenHash(tokenHash string) (*models.Refr
 
 func (r *refreshTokenRepository) FindByUserID(userID uint) (*models.RefreshToken, error) {
 	var refreshToken models.RefreshToken
-	err := r.db.Where("user_id = ?", userID).First(&refreshToken).Error
+	err := r.db.Where("user_id = ? AND revoked_at IS NULL", userID).First(&refreshToken).Error
 	if err != nil {
 		return nil, err
 	}
