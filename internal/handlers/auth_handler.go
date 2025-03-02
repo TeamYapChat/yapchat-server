@@ -343,3 +343,29 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		Message: "Tokens refreshed successfully",
 	})
 }
+
+// ValidateTokenHandler godoc
+// @Summary      Validate access token
+// @Description  Validates the access token from the cookie.
+// @Tags         auth
+// @Produce      json
+// @Success      200 {object} utils.SuccessResponse
+// @Failure      401 {object} utils.ErrorResponse
+// @Router       /auth/validate [get]
+func (h *AuthHandler) ValidateTokenHandler(c *gin.Context) {
+	accessTokenCookie, err := c.Cookie("access_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("Access token cookie not found"))
+		return
+	}
+
+	if !h.authService.ValidateAccessToken(accessTokenCookie) {
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("Invalid access token"))
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.SuccessResponse{
+		Success: true,
+		Message: "Token is valid",
+	})
+}

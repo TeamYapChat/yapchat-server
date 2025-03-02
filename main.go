@@ -104,6 +104,8 @@ func main() {
 			middleware.AuthMiddleware(cfg.JWTSecret),
 			authHandler.RefreshTokenHandler,
 		)
+
+		public.GET("/validate", authHandler.ValidateTokenHandler)
 	}
 
 	protected := router.Group("/v1")

@@ -257,6 +257,23 @@ paths:
       summary: Send verification email
       tags:
       - auth
+  /auth/validate:
+    get:
+      description: Validates the access token from the cookie.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Validate access token
+      tags:
+      - auth
   /auth/verify-email:
     get:
       consumes:

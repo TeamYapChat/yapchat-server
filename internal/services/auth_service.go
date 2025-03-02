@@ -170,6 +170,18 @@ func (s *AuthService) RefreshToken(userID uint, refreshTokenValue string) (strin
 	return accessTokenString, newRefreshTokenValue, nil
 }
 
+func (s *AuthService) ValidateAccessToken(tokenValue string) bool {
+	token, err := jwt.Parse(tokenValue, func(token *jwt.Token) (any, error) {
+		return []byte(s.jwtSecret), nil
+	})
+
+	if err != nil || !token.Valid {
+		return false
+	}
+
+	return true
+}
+
 func (s *AuthService) SendVerificationEmail(id uint) error {
 	user, err := s.UserRepo.FindByID(id)
 	if err != nil {

@@ -225,6 +225,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/validate": {
+            "get": {
+                "description": "Validates the access token from the cookie.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Validate access token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/verify-email": {
             "get": {
                 "description": "Verify user's email address using verification code",
