@@ -604,7 +604,7 @@ paths:
       summary: Update user profile
       tags:
       - users
-  /ws:
+  /v1/ws:
     get:
       description: Handles websocket connections for real-time communication.
       responses: {}

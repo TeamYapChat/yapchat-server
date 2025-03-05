@@ -765,7 +765,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ws": {
+        "/v1/ws": {
             "get": {
                 "description": "Handles websocket connections for real-time communication.",
                 "tags": [
