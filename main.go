@@ -64,6 +64,11 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 func main() {
 	cfg := config.LoadConfig()
 
+	if err := websocket.InitializeNATS(cfg.NATSURL); err != nil {
+		log.Fatal("Failed to initialize NATS", "err", err.Error())
+	}
+	go websocket.StartBroadcaster()
+
 	db, err := InitDB(cfg)
 	if err != nil {
 		log.Fatal("Failed to initialize database", "err", err.Error())

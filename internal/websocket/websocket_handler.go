@@ -36,9 +36,9 @@ type Message struct {
 	Type      string `json:"type"`
 }
 
-func InitializeNATS() error {
+func InitializeNATS(url string) error {
 	var err error
-	nc, err = nats.Connect(nats.DefaultURL) // TODO: Get NATS URL from config
+	nc, err = nats.Connect(url)
 	if err != nil {
 		return err
 	}
@@ -150,11 +150,4 @@ func StartBroadcaster() {
 
 	// Keep broadcaster running
 	select {} // Block indefinitely to keep goroutine alive
-}
-
-func init() {
-	if err := InitializeNATS(); err != nil {
-		log.Fatal("Failed to initialize NATS", "err", err)
-	}
-	go StartBroadcaster()
 }
