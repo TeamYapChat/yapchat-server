@@ -64,11 +64,6 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 func main() {
 	cfg := config.LoadConfig()
 
-	if err := websocket.InitializeNATS(cfg.NATSURL); err != nil {
-		log.Fatal("Failed to initialize NATS", "err", err.Error())
-	}
-	go websocket.StartBroadcaster()
-
 	db, err := InitDB(cfg)
 	if err != nil {
 		log.Fatal("Failed to initialize database", "err", err.Error())
@@ -76,6 +71,13 @@ func main() {
 	log.Info("Successfully initialized database")
 
 	userRepo := repositories.NewUserRepository(db)
+
+	chatroomRepo := repositories.NewChatRoomRepository(db)
+	chatroomService := services.NewChatRoomService(chatroomRepo, userRepo)
+
+	wsHandler := websocket.NewWSHandler(cfg.NATSURL, chatroomService)
+	go wsHandler.StartBroadcaster()
+
 	mailer := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -125,9 +127,6 @@ func main() {
 		protected.DELETE("/user", userHandler.DeleteUser)
 
 		// Chatroom routes
-		chatroomRepo := repositories.NewChatRoomRepository(db)
-		chatroomService := services.NewChatRoomService(chatroomRepo, userRepo)
-
 		chatroomHandler := handlers.NewChatRoomHandler(chatroomService)
 
 		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
@@ -139,7 +138,7 @@ func main() {
 		protected.POST("/chatrooms/:id/leave", chatroomHandler.LeaveChatRoom)
 
 		// Websocket routes
-		protected.GET("/ws", websocket.WebSocketHandler)
+		protected.GET("/ws", wsHandler.WebSocketHandler)
 	}
 
 	// Run on :8080 by default

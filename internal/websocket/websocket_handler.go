@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 	"sync"
 	"time"
 
@@ -11,8 +12,30 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/nats-io/nats.go"
 
+	"github.com/teamyapchat/yapchat-server/internal/services"
 	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
+
+type WSHandler struct {
+	chatroomService *services.ChatRoomService
+	clients         map[uint]*websocket.Conn
+	nc              *nats.Conn
+}
+
+func NewWSHandler(natsURL string, chatroomService *services.ChatRoomService) *WSHandler {
+	nc, err := nats.Connect(natsURL)
+	if err != nil {
+		log.Fatal("Failed to connect to NATS", "err", err.Error())
+	}
+
+	log.Info("Connected to NATS")
+
+	return &WSHandler{
+		chatroomService: chatroomService,
+		clients:         make(map[uint]*websocket.Conn),
+		nc:              nc,
+	}
+}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -22,36 +45,32 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-var (
-	clients = make(map[uint]*websocket.Conn)
-	mutex   sync.Mutex
-	nc      *nats.Conn
-)
+var mutex sync.Mutex
 
 type Message struct {
-	Content   string `json:"content"`
-	SenderID  uint   `json:"sender_id"`
-	RoomID    uint   `json:"room_id"`
-	Timestamp string `json:"timestamp"`
-	Type      string `json:"type"`
+	Content   string `json:"content"             binding:"required"`
+	SenderID  uint   `json:"sender_id,omitempty"`
+	RoomID    uint   `json:"room_id"             binding:"required"`
+	Timestamp string `json:"timestamp,omitempty"`
+	Type      string `json:"type,omitempty"`
 }
 
-func InitializeNATS(url string) error {
-	var err error
-	nc, err = nats.Connect(url)
-	if err != nil {
-		return err
-	}
-	log.Info("Connected to NATS")
-	return nil
-}
+// func InitializeNATS(url string) error {
+// 	var err error
+// 	nc, err = nats.Connect(url)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	log.Info("Connected to NATS")
+// 	return nil
+// }
 
 // WebSocketHandler godoc
 // @Summary      Handle websocket connection
 // @Description  Handles websocket connections for real-time communication.
 // @Tags         websocket
 // @Router       /v1/ws [get]
-func WebSocketHandler(c *gin.Context) {
+func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(
@@ -69,11 +88,11 @@ func WebSocketHandler(c *gin.Context) {
 	defer conn.Close()
 
 	mutex.Lock()
-	clients[userID.(uint)] = conn // Register new client with userID as key
+	h.clients[userID.(uint)] = conn // Register new client with userID as key
 	mutex.Unlock()
 	defer func() {
 		mutex.Lock()
-		delete(clients, userID.(uint)) // Unregister client on disconnect using userID
+		delete(h.clients, userID.(uint)) // Unregister client on disconnect using userID
 		mutex.Unlock()
 	}()
 
@@ -81,10 +100,13 @@ func WebSocketHandler(c *gin.Context) {
 
 	for {
 		var msg Message
-		err := conn.ReadJSON(&msg)
-		if err != nil {
+		if err := conn.ReadJSON(&msg); err != nil {
 			log.Error("Error reading json message", "id", userID.(uint), "err", err.Error())
-			break
+			continue
+		}
+		if err := c.ShouldBindJSON(&msg); err != nil {
+			log.Error("Bad message body", "id", userID.(uint), "err", err.Error())
+			continue
 		}
 
 		log.Debug("Received message", "msg", msg)
@@ -102,7 +124,7 @@ func WebSocketHandler(c *gin.Context) {
 			continue // Handle error appropriately
 		}
 
-		err = nc.Publish("chat_messages", msgJSON)
+		err = h.nc.Publish("chat_messages", msgJSON)
 		if err != nil {
 			log.Error("Error publishing message to NATS", "err", err.Error())
 			continue // Handle error appropriately
@@ -110,9 +132,9 @@ func WebSocketHandler(c *gin.Context) {
 	}
 }
 
-func StartBroadcaster() {
+func (h *WSHandler) StartBroadcaster() {
 	// Subscribe to NATS subject
-	_, err := nc.Subscribe("chat_messages", func(m *nats.Msg) {
+	_, err := h.nc.Subscribe("chat_messages", func(m *nats.Msg) {
 		var msg Message
 		err := json.Unmarshal(m.Data, &msg)
 		if err != nil {
@@ -122,11 +144,26 @@ func StartBroadcaster() {
 
 		log.Debug("Received NATS message", "msg", msg)
 
+		chatroom, err := h.chatroomService.GetChatRoomByID(msg.RoomID)
+		if err != nil {
+			log.Error("Error finding chatroom", "chatroomID", msg.RoomID, "err", err.Error())
+			return
+		}
+
+		var recipientIDs []uint
+		if chatroom.Participants != nil {
+			for _, participant := range chatroom.Participants {
+				recipientIDs = append(recipientIDs, participant.ID)
+			}
+		}
+
 		// Broadcast message to all connected clients, filtering by roomID
 		mutex.Lock()
-		for userID, client := range clients { // Iterate through all connected clients
-			// TODO: Retrieve user's room ID from message payload (msg.RoomID) and check if the connected client (userID) is in that room.
-			// For now, just broadcast to all connected clients for testing.
+		for userID, client := range h.clients { // Iterate through all connected clients
+			if !slices.Contains(recipientIDs, userID) {
+				continue
+			}
+
 			err := client.WriteJSON(msg) // Use msg from NATS message
 			if err != nil {
 				log.Error(
@@ -137,7 +174,7 @@ func StartBroadcaster() {
 					err.Error(),
 				)
 				client.Close()
-				delete(clients, userID) // Remove client if write fails
+				delete(h.clients, userID) // Remove client if write fails
 			}
 		}
 		mutex.Unlock()
