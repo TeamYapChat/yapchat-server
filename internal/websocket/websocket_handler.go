@@ -55,16 +55,6 @@ type Message struct {
 	Type      string `json:"type,omitempty"`
 }
 
-// func InitializeNATS(url string) error {
-// 	var err error
-// 	nc, err = nats.Connect(url)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	log.Info("Connected to NATS")
-// 	return nil
-// }
-
 // WebSocketHandler godoc
 // @Summary      Handle websocket connection
 // @Description  Handles websocket connections for real-time communication.

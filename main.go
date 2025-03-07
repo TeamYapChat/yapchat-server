@@ -70,18 +70,23 @@ func main() {
 	}
 	log.Info("Successfully initialized database")
 
+	// Repos
 	userRepo := repositories.NewUserRepository(db)
-
+	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
 	chatroomRepo := repositories.NewChatRoomRepository(db)
+
+	// Services
+	mailerService := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
+	authService := services.NewAuthService(userRepo, refreshTokenRepo, mailerService, cfg.JWTSecret)
+	userService := services.NewUserService(userRepo)
 	chatroomService := services.NewChatRoomService(chatroomRepo, userRepo)
 
+	// Handlers
+	authHandler := handlers.NewAuthHandler(authService)
+	userHandler := handlers.NewUserHandler(userService)
+	chatroomHandler := handlers.NewChatRoomHandler(chatroomService)
 	wsHandler := websocket.NewWSHandler(cfg.NATSURL, chatroomService)
 	go wsHandler.StartBroadcaster()
-
-	mailer := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
-
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
 	router, err := graceful.Default()
 	if err != nil {
@@ -96,10 +101,6 @@ func main() {
 
 	public := router.Group("/auth")
 	{
-		refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
-		authService := services.NewAuthService(userRepo, refreshTokenRepo, mailer, cfg.JWTSecret)
-		authHandler := handlers.NewAuthHandler(authService)
-
 		public.GET("/verify-email", authHandler.VerifyEmailHandler)
 
 		public.POST("/register", authHandler.RegisterHandler)
@@ -119,16 +120,11 @@ func main() {
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
 		// User routes
-		userService := services.NewUserService(userRepo)
-		userHandler := handlers.NewUserHandler(userService)
-
 		protected.GET("/user", userHandler.GetUser)
 		protected.PUT("/user", userHandler.UpdateUser)
 		protected.DELETE("/user", userHandler.DeleteUser)
 
 		// Chatroom routes
-		chatroomHandler := handlers.NewChatRoomHandler(chatroomService)
-
 		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
 		protected.GET("/chatrooms/:id", chatroomHandler.GetChatRoomByID)
 		protected.GET("/chatrooms", chatroomHandler.ListChatRooms)
@@ -140,6 +136,9 @@ func main() {
 		// Websocket routes
 		protected.GET("/ws", wsHandler.WebSocketHandler)
 	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	// Run on :8080 by default
 	if err := router.RunWithContext(ctx); err != nil && err == context.Canceled {
