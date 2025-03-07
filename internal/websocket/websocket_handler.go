@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"net/http"
+	"runtime/debug"
 	"slices"
 	"sync"
 	"time"
@@ -75,28 +76,42 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 		log.Error("Failed to upgrade connection", "err", err.Error())
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		conn.Close()
+		mutex.Lock()
+		delete(h.clients, userID.(uint))
+		mutex.Unlock()
+		log.Info("Client disconnected", "id", userID.(uint))
+	}()
 
 	mutex.Lock()
-	h.clients[userID.(uint)] = conn // Register new client with userID as key
+	h.clients[userID.(uint)] = conn
 	mutex.Unlock()
-	defer func() {
-		mutex.Lock()
-		delete(h.clients, userID.(uint)) // Unregister client on disconnect using userID
-		mutex.Unlock()
-	}()
 
 	log.Info("Client connected", "id", userID.(uint))
 
+	// Handle panics in connection handler
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("WebSocket panic recovered",
+				"id", userID.(uint),
+				"panic", r,
+				"stack", string(debug.Stack()))
+		}
+	}()
+
 	for {
 		var msg Message
-		if err := conn.ReadJSON(&msg); err != nil {
-			log.Error("Error reading json message", "id", userID.(uint), "err", err.Error())
-			continue
-		}
-		if err := c.ShouldBindJSON(&msg); err != nil {
-			log.Error("Bad message body", "id", userID.(uint), "err", err.Error())
-			continue
+		err := conn.ReadJSON(&msg)
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err,
+				websocket.CloseGoingAway,
+				websocket.CloseNormalClosure) {
+				log.Warn("Unexpected WebSocket closure",
+					"id", userID.(uint),
+					"err", err.Error())
+			}
+			break
 		}
 
 		log.Debug("Received message", "msg", msg)
