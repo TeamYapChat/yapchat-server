@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"runtime/debug"
-	"slices"
 	"sync"
 	"time"
 
@@ -155,34 +154,34 @@ func (h *WSHandler) StartBroadcaster() {
 			return
 		}
 
-		var recipientIDs []uint
-		if chatroom.Participants != nil {
-			for _, participant := range chatroom.Participants {
-				recipientIDs = append(recipientIDs, participant.ID)
-			}
+		if chatroom.Participants == nil {
+			log.Warn("No participants found in chatroom", "chatroomID", msg.RoomID)
+			return
+		}
+
+		recipientIDs := make([]uint, 0, len(chatroom.Participants))
+		for _, participant := range chatroom.Participants {
+			recipientIDs = append(recipientIDs, participant.ID)
 		}
 
 		// Broadcast message to all connected clients, filtering by roomID
 		mutex.Lock()
-		for userID, client := range h.clients { // Iterate through all connected clients
-			if !slices.Contains(recipientIDs, userID) {
-				continue
-			}
-
-			err := client.WriteJSON(msg) // Use msg from NATS message
-			if err != nil {
-				log.Error(
-					"Error broadcasting message to client",
-					"userID",
-					userID,
-					"err",
-					err.Error(),
-				)
-				client.Close()
-				delete(h.clients, userID) // Remove client if write fails
+		defer mutex.Unlock()
+		for _, userID := range recipientIDs {
+			if client, exists := h.clients[userID]; exists {
+				if err := client.WriteJSON(msg); err != nil {
+					log.Error(
+						"Error broadcasting message to client",
+						"userID",
+						userID,
+						"err",
+						err.Error(),
+					)
+					client.Close()
+					delete(h.clients, userID) // Remove client if write fails
+				}
 			}
 		}
-		mutex.Unlock()
 	})
 	if err != nil {
 		log.Error("Error subscribing to NATS subject", "err", err.Error())
