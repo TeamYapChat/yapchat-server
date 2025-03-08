@@ -301,6 +301,8 @@ func (h *ChatRoomHandler) LeaveChatRoom(c *gin.Context) {
 	}
 	chatroomID := uint(idUint64)
 
+	// TODO: Only remove user that exists in chat room
+
 	err = h.service.RemoveParticipantFromChatRoom(chatroomID, userID.(uint))
 	if err != nil {
 		if errors.Is(err, services.ErrChatRoomNotFound) {

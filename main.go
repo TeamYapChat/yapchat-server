@@ -102,18 +102,12 @@ func main() {
 	public := router.Group("/auth")
 	{
 		public.GET("/verify-email", authHandler.VerifyEmailHandler)
+		public.GET("/validate", authHandler.ValidateTokenHandler)
 
 		public.POST("/register", authHandler.RegisterHandler)
 		public.POST("/login", authHandler.LoginHandler)
 		public.POST("/send-verification-email", authHandler.SendEmailHandler)
-
-		public.POST(
-			"/refresh",
-			middleware.AuthMiddleware(cfg.JWTSecret),
-			authHandler.RefreshTokenHandler,
-		)
-
-		public.GET("/validate", authHandler.ValidateTokenHandler)
+		public.POST("/refresh", authHandler.RefreshTokenHandler)
 	}
 
 	protected := router.Group("/v1")

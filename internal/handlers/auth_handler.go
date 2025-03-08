@@ -280,23 +280,20 @@ func (h *AuthHandler) VerifyEmailHandler(c *gin.Context) {
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /auth/refresh [post]
 func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
+	accessTokenCookie, err := c.Cookie("access_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("Access token cookie not found"))
 		return
 	}
 
 	refreshTokenCookie, err := c.Cookie("refresh_token")
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, utils.ErrorResponse{
-			Success: false,
-			Message: "Refresh token cookie not found",
-		})
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("Refresh token cookie not found"))
 		return
 	}
 
 	accessTokenString, newRefreshTokenValue, err := h.authService.RefreshToken(
-		userID.(uint),
+		accessTokenCookie,
 		refreshTokenCookie,
 	)
 	if err != nil {

@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"math"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -110,7 +111,27 @@ func (s *AuthService) Login(login, password string) (string, string, error) {
 	return accessTokenString, refreshTokenValue, nil
 }
 
-func (s *AuthService) RefreshToken(userID uint, refreshTokenValue string) (string, string, error) {
+func (s *AuthService) RefreshToken(
+	accessTokenValue, refreshTokenValue string,
+) (string, string, error) {
+	oldToken, err := jwt.Parse(accessTokenValue, func(token *jwt.Token) (any, error) {
+		return []byte(s.jwtSecret), nil
+	})
+	if err != nil {
+		return "", "", errors.New("invalid access token")
+	}
+
+	if !oldToken.Valid {
+		return "", "", errors.New("invalid access token")
+	}
+
+	claims, ok := oldToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", "", errors.New("invalid access token claims")
+	}
+
+	userID := uint(math.Round(claims["sub"].(float64)))
+
 	refreshTokenModel, err := s.RefreshTokenRepo.FindByUserID(userID)
 	if err != nil {
 		log.Debug("Refresh token not found", "userID", userID, "err", err)
