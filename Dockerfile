@@ -17,7 +17,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o server main.go
 
 # Stage 2: Final stage
-FROM --platform=$TARGETPLATFORM alpine:edge AS final
+FROM --platform=$TARGETPLATFORM scratch AS final
 WORKDIR /app
 
 LABEL org.opencontainers.image.source=https://github.com/teamyapchat/yapchat-server
@@ -26,9 +26,6 @@ LABEL org.opencontainers.image.licenses=GPLv3
 
 # Copy binary from build stage
 COPY --from=build /app/server .
-
-# Set permissions (optional for execution issues)
-RUN chmod +x /app/server
 
 # Expose the application port
 EXPOSE 8080
