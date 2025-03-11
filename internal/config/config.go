@@ -14,6 +14,7 @@ type Config struct {
 	DBUser           string
 	DBPassword       string
 	DBName           string
+	RedisURL         string
 	NATSURL          string
 	JWTSecret        string
 	MailerSendAPIKey string
@@ -39,6 +40,7 @@ func LoadConfig() Config {
 	config.DBHost = os.Getenv("DB_HOST")
 	config.DBUser = os.Getenv("DB_USER")
 	config.DBName = os.Getenv("DB_NAME")
+	config.RedisURL = os.Getenv("REDIS_URL")
 	config.NATSURL = os.Getenv("NATS_URL")
 	config.JWTSecret = os.Getenv("JWT_SECRET")
 	config.EmailTemplateID = os.Getenv("EMAIL_TEMPLATE_ID")

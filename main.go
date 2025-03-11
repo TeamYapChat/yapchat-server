@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/gin-contrib/graceful"
@@ -70,6 +71,19 @@ func main() {
 	}
 	log.Info("Successfully initialized database")
 
+	// Middlewares
+	limiter := middleware.NewRateLimiter(cfg.RedisURL)
+
+	limiter.AddLimiter("auth", middleware.RateLimitConfig{
+		Limit:  5,
+		Window: time.Minute,
+	})
+
+	limiter.AddLimiter("protected", middleware.RateLimitConfig{
+		Limit:  5,
+		Window: time.Second,
+	})
+
 	// Repos
 	userRepo := repositories.NewUserRepository(db)
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
@@ -100,6 +114,7 @@ func main() {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	public := router.Group("/auth")
+	public.Use(limiter.Middleware("auth"))
 	{
 		public.GET("/verify-email", authHandler.VerifyEmailHandler)
 		public.GET("/validate", authHandler.ValidateTokenHandler)
@@ -111,7 +126,7 @@ func main() {
 	}
 
 	protected := router.Group("/v1")
-	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret), limiter.Middleware("protected"))
 	{
 		// User routes
 		protected.GET("/user", userHandler.GetUser)
