@@ -21,7 +21,7 @@ const docTemplate = `{
     "paths": {
         "/auth/login": {
             "post": {
-                "description": "Login with email or username and password. Access and refresh tokens are returned as HttpOnly cookies.",
+                "description": "Login with email or username and password. Returns access token in response body and sets refresh token cookie.",
                 "consumes": [
                     "application/json"
                 ],
@@ -73,7 +73,7 @@ const docTemplate = `{
         },
         "/auth/refresh": {
             "post": {
-                "description": "Handles refresh token logic to issue new access and refresh tokens. New access and refresh tokens are returned as HttpOnly cookies.",
+                "description": "Handles refresh token logic to issue new access and refresh tokens. Returns new access token in response body and sets refresh token cookie.",
                 "produces": [
                     "application/json"
                 ],
