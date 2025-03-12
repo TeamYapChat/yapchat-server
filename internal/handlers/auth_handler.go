@@ -106,7 +106,7 @@ func (h *AuthHandler) RegisterHandler(c *gin.Context) {
 
 // LoginHandler godoc
 // @Summary      Authenticate user
-// @Description  Login with email or username and password. Access and refresh tokens are returned as HttpOnly cookies.
+// @Description  Login with email or username and password. Returns access token in response body and sets refresh token cookie.
 // @Tags         auth
 // @Accept       json
 // @Produce      json
@@ -137,17 +137,6 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	c.SetSameSite(http.SameSiteNoneMode)
 
-	// Set access token cookie
-	c.SetCookie(
-		"access_token",
-		accessToken,
-		1800, // 30 minutes
-		"/",
-		domain,
-		true, // Secure
-		true, // HttpOnly
-	)
-
 	// Set refresh token cookie
 	c.SetCookie(
 		"refresh_token",
@@ -162,6 +151,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessResponse{
 		Success: true,
 		Message: "Login successful",
+		Data:    gin.H{"access_token": accessToken},
 	})
 }
 
@@ -272,7 +262,7 @@ func (h *AuthHandler) VerifyEmailHandler(c *gin.Context) {
 
 // RefreshTokenHandler godoc
 // @Summary      Refresh access and refresh tokens
-// @Description  Handles refresh token logic to issue new access and refresh tokens. New access and refresh tokens are returned as HttpOnly cookies.
+// @Description  Handles refresh token logic to issue new access and refresh tokens. Returns new access token in response body and sets refresh token cookie.
 // @Tags         auth
 // @Produce      json
 // @Success      200 {object} utils.SuccessResponse "Successful token refresh. New access and refresh tokens are in HttpOnly cookies."
@@ -302,17 +292,6 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 
 	c.SetSameSite(http.SameSiteNoneMode)
 
-	// Set new access token cookie
-	c.SetCookie(
-		"access_token",
-		accessTokenString,
-		1800, // 30 minutes
-		"/",
-		domain,
-		true, // Secure
-		true, // HttpOnly
-	)
-
 	// Set new refresh token cookie if rotation occurred
 	if newRefreshTokenValue != "" {
 		c.SetCookie(
@@ -329,6 +308,7 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.SuccessResponse{
 		Success: true,
 		Message: "Tokens refreshed successfully",
+		Data:    gin.H{"access_token": accessTokenString},
 	})
 }
 
@@ -341,13 +321,16 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 // @Failure      401 {object} utils.ErrorResponse
 // @Router       /auth/validate [get]
 func (h *AuthHandler) ValidateTokenHandler(c *gin.Context) {
-	accessTokenCookie, err := c.Cookie("access_token")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("Access token cookie not found"))
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" || len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		c.JSON(
+			http.StatusUnauthorized,
+			utils.NewErrorResponse("Authorization header missing or invalid"),
+		)
 		return
 	}
-
-	if !h.authService.ValidateAccessToken(accessTokenCookie) {
+	tokenString := authHeader[7:]
+	if !h.authService.ValidateAccessToken(tokenString) {
 		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("Invalid access token"))
 		return
 	}

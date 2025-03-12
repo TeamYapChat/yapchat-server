@@ -9,16 +9,16 @@ import (
 
 func AuthMiddleware(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		accessTokenCookie, err := c.Cookie("access_token")
-		if err != nil {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" || len(authHeader) < 7 || authHeader[:7] != "Bearer " {
 			c.AbortWithStatusJSON(
 				http.StatusUnauthorized,
-				gin.H{"error": "User is not authorized"},
+				gin.H{"error": "Authorization header missing or invalid"},
 			)
 			return
 		}
 
-		tokenString := accessTokenCookie
+		tokenString := authHeader[7:] // Extract token after "Bearer " prefix
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 			return []byte(secret), nil
 		})
