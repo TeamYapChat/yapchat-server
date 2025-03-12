@@ -2,12 +2,11 @@ package services
 
 import (
 	"errors"
-	"math"
 	"time"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/charmbracelet/log"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/exp/rand"
 
@@ -88,11 +87,16 @@ func (s *AuthService) Login(login, password string) (string, string, error) {
 	}
 
 	// Generate refresh token
-	refreshTokenValue := uuid.New().String()
-	hashedRefreshToken, err := bcrypt.GenerateFromPassword(
-		[]byte(refreshTokenValue),
-		bcrypt.DefaultCost,
-	)
+	refreshTokenValue := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(7 * 24 * time.Hour).Unix(),
+	})
+	refreshTokenString, err := refreshTokenValue.SignedString([]byte(s.jwtSecret))
+	if err != nil {
+		return "", "", err
+	}
+
+	hashedRefreshToken, err := argon2id.CreateHash(refreshTokenString, argon2id.DefaultParams)
 	if err != nil {
 		return "", "", err
 	}
@@ -108,37 +112,37 @@ func (s *AuthService) Login(login, password string) (string, string, error) {
 		return "", "", err
 	}
 
-	return accessTokenString, refreshTokenValue, nil
+	return accessTokenString, refreshTokenString, nil
 }
 
-func (s *AuthService) RefreshToken(
-	accessTokenValue, refreshTokenValue string,
-) (string, string, error) {
-	oldToken, err := jwt.Parse(accessTokenValue, func(token *jwt.Token) (any, error) {
+func (s *AuthService) RefreshToken(refreshTokenValue string) (string, string, error) {
+	refreshToken, err := jwt.Parse(refreshTokenValue, func(t *jwt.Token) (any, error) {
 		return []byte(s.jwtSecret), nil
 	})
-	if err != nil {
-		return "", "", errors.New("invalid access token")
-	}
 
-	if !oldToken.Valid {
-		return "", "", errors.New("invalid access token")
-	}
-
-	claims, ok := oldToken.Claims.(jwt.MapClaims)
-	if !ok {
-		return "", "", errors.New("invalid access token claims")
-	}
-
-	userID := uint(math.Round(claims["sub"].(float64)))
-
-	refreshTokenModel, err := s.RefreshTokenRepo.FindByUserID(userID)
-	if err != nil {
-		log.Debug("Refresh token not found", "userID", userID, "err", err)
+	if err != nil || !refreshToken.Valid {
 		return "", "", errors.New("invalid refresh token")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(refreshTokenModel.TokenHash), []byte(refreshTokenValue)); err != nil {
+	claims, ok := refreshToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", "", errors.New("invalid token claims")
+	}
+
+	userID := uint(claims["sub"].(float64))
+
+	refreshTokenModel, err := s.RefreshTokenRepo.FindByUserID(userID)
+	if err != nil {
+		return "", "", errors.New("invalid refresh token")
+	}
+
+	match, err := argon2id.ComparePasswordAndHash(refreshTokenValue, refreshTokenModel.TokenHash)
+	if err != nil {
+		log.Error("Error when comparing refresh token hash", "err", err.Error())
+		return "", "", errors.New("invalid refresh token")
+	}
+
+	if !match {
 		return "", "", errors.New("invalid refresh token")
 	}
 
@@ -166,11 +170,16 @@ func (s *AuthService) RefreshToken(
 	}
 
 	// Generate new refresh token (rotation)
-	newRefreshTokenValue := uuid.New().String()
-	hashedNewRefreshToken, err := bcrypt.GenerateFromPassword(
-		[]byte(newRefreshTokenValue),
-		bcrypt.DefaultCost,
-	)
+	newRefreshTokenValue := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(7 * 24 * time.Hour).Unix(),
+	})
+	refreshTokenString, err := newRefreshTokenValue.SignedString([]byte(s.jwtSecret))
+	if err != nil {
+		return "", "", err
+	}
+
+	hashedNewRefreshToken, err := argon2id.CreateHash(refreshTokenString, argon2id.DefaultParams)
 	if err != nil {
 		return "", "", err
 	}
@@ -188,7 +197,7 @@ func (s *AuthService) RefreshToken(
 		return "", "", err
 	}
 
-	return accessTokenString, newRefreshTokenValue, nil
+	return accessTokenString, refreshTokenString, nil
 }
 
 func (s *AuthService) ValidateAccessToken(tokenValue string) bool {

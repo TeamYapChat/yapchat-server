@@ -10,7 +10,6 @@ import (
 
 type RefreshTokenRepository interface {
 	Create(refreshToken *models.RefreshToken) error
-	FindByTokenHash(tokenHash string) (*models.RefreshToken, error)
 	FindByUserID(userID uint) (*models.RefreshToken, error)
 	Revoke(refreshToken *models.RefreshToken) error
 }
@@ -25,15 +24,6 @@ func NewRefreshTokenRepository(db *gorm.DB) RefreshTokenRepository {
 
 func (r *refreshTokenRepository) Create(refreshToken *models.RefreshToken) error {
 	return r.db.Create(refreshToken).Error
-}
-
-func (r *refreshTokenRepository) FindByTokenHash(tokenHash string) (*models.RefreshToken, error) {
-	var refreshToken models.RefreshToken
-	err := r.db.Where("token_hash = ?", tokenHash).First(&refreshToken).Error
-	if err != nil {
-		return nil, err
-	}
-	return &refreshToken, nil
 }
 
 func (r *refreshTokenRepository) FindByUserID(userID uint) (*models.RefreshToken, error) {

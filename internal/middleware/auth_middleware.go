@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"math"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +40,7 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", uint(math.Round(claims["sub"].(float64))))
+		c.Set("userID", uint(claims["sub"].(float64)))
 		c.Next()
 	}
 }

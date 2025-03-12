@@ -3,11 +3,11 @@ module github.com/teamyapchat/yapchat-server
 go 1.23.2
 
 require (
+	github.com/alexedwards/argon2id v1.0.0
 	github.com/charmbracelet/log v0.4.0
 	github.com/gin-contrib/graceful v1.1.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 	github.com/nats-io/nats.go v1.39.1
