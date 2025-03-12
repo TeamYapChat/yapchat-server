@@ -137,8 +137,6 @@ func main() {
 		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
 		protected.GET("/chatrooms/:id", chatroomHandler.GetChatRoomByID)
 		protected.GET("/chatrooms", chatroomHandler.ListChatRooms)
-		protected.PUT("/chatrooms/:id", chatroomHandler.UpdateChatRoom)
-		protected.DELETE("/chatrooms/:id", chatroomHandler.DeleteChatRoom)
 		protected.POST("/chatrooms/:id/join", chatroomHandler.JoinChatRoom)
 		protected.POST("/chatrooms/:id/leave", chatroomHandler.LeaveChatRoom)
 

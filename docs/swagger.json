@@ -296,7 +296,7 @@
         },
         "/v1/chatrooms": {
             "get": {
-                "description": "Get a list of all chat rooms",
+                "description": "Get a list of all chat rooms that the user is in",
                 "produces": [
                     "application/json"
                 ],
@@ -391,108 +391,6 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/handlers.ChatRoomResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update chat room by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "chatrooms"
-                ],
-                "summary": "Update chat room by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Chat room ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Chat room info",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ChatRoomRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.SuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete chat room by ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "chatrooms"
-                ],
-                "summary": "Delete chat room by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Chat room ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.SuccessResponse"
                         }
                     },
                     "400": {
