@@ -24,6 +24,15 @@ definitions:
     - login
     - password
     type: object
+  handlers.MessageResponse:
+    properties:
+      content:
+        type: string
+      sender_id:
+        type: integer
+      timestamp:
+        type: string
+    type: object
   handlers.RegisterRequest:
     properties:
       email:
@@ -316,9 +325,14 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/handlers.ChatRoomResponse'
-            type: array
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/handlers.ChatRoomResponse'
+                  type: array
+              type: object
         "500":
           description: Internal Server Error
           schema:
@@ -370,7 +384,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.ChatRoomResponse'
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.ChatRoomResponse'
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -446,6 +465,56 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Leave chat room by ID
+      tags:
+      - chatrooms
+  /v1/chatrooms/{id}/messages:
+    get:
+      description: Get messages for a specific chat room
+      parameters:
+      - description: Chat room ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Number of messages to return (default 25)
+        in: query
+        name: count
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/handlers.MessageResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get messages by chat room ID
       tags:
       - chatrooms
   /v1/user:

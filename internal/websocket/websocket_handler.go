@@ -12,17 +12,23 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/nats-io/nats.go"
 
+	"github.com/teamyapchat/yapchat-server/internal/models"
 	"github.com/teamyapchat/yapchat-server/internal/services"
 	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
 
 type WSHandler struct {
 	chatroomService *services.ChatRoomService
+	messageService  *services.MessageService
 	clients         map[uint]*websocket.Conn
 	nc              *nats.Conn
 }
 
-func NewWSHandler(natsURL string, chatroomService *services.ChatRoomService) *WSHandler {
+func NewWSHandler(
+	natsURL string,
+	chatroomService *services.ChatRoomService,
+	messageService *services.MessageService,
+) *WSHandler {
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		log.Fatal("Failed to connect to NATS", "err", err.Error())
@@ -32,6 +38,7 @@ func NewWSHandler(natsURL string, chatroomService *services.ChatRoomService) *WS
 
 	return &WSHandler{
 		chatroomService: chatroomService,
+		messageService:  messageService,
 		clients:         make(map[uint]*websocket.Conn),
 		nc:              nc,
 	}
@@ -93,7 +100,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Error("WebSocket panic recovered",
-				"id", userID.(uint),
+				"userID", userID.(uint),
 				"panic", r,
 				"stack", string(debug.Stack()))
 		}
@@ -107,7 +114,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 				websocket.CloseGoingAway,
 				websocket.CloseNormalClosure) {
 				log.Warn("Unexpected WebSocket closure",
-					"id", userID.(uint),
+					"userID", userID.(uint),
 					"err", err.Error())
 			}
 			break
@@ -119,7 +126,17 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 		msg.Timestamp = time.Now().Format(time.RFC3339)
 		msg.Type = "message"
 
-		// TODO: Persist message to DB
+		// Persist message to DB
+		err = h.messageService.CreateMessage(&models.Message{
+			SenderID:  msg.SenderID,
+			RoomID:    msg.RoomID,
+			Content:   msg.Content,
+			Timestamp: time.Now(),
+			Type:      msg.Type,
+		})
+		if err != nil {
+			log.Error("Failed to persist message", "err", err.Error())
+		}
 
 		// Publish message to NATS
 		msgJSON, err := json.Marshal(msg)

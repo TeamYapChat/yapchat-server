@@ -88,18 +88,20 @@ func main() {
 	userRepo := repositories.NewUserRepository(db)
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
 	chatroomRepo := repositories.NewChatRoomRepository(db)
+	messageRepo := repositories.NewMessageRepository(db)
 
 	// Services
 	mailerService := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
 	authService := services.NewAuthService(userRepo, refreshTokenRepo, mailerService, cfg.JWTSecret)
 	userService := services.NewUserService(userRepo)
 	chatroomService := services.NewChatRoomService(chatroomRepo, userRepo)
+	messageService := services.NewMessageService(messageRepo)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userService)
-	chatroomHandler := handlers.NewChatRoomHandler(chatroomService)
-	wsHandler := websocket.NewWSHandler(cfg.NATSURL, chatroomService)
+	chatroomHandler := handlers.NewChatRoomHandler(chatroomService, messageService)
+	wsHandler := websocket.NewWSHandler(cfg.NATSURL, chatroomService, messageService)
 	go wsHandler.StartBroadcaster()
 
 	router, err := graceful.Default()
@@ -134,9 +136,11 @@ func main() {
 		protected.DELETE("/user", userHandler.DeleteUser)
 
 		// Chatroom routes
-		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
-		protected.GET("/chatrooms/:id", chatroomHandler.GetChatRoomByID)
 		protected.GET("/chatrooms", chatroomHandler.ListChatRooms)
+		protected.GET("/chatrooms/:id", chatroomHandler.GetChatRoomByID)
+		protected.GET("/chatrooms/:id/messages", chatroomHandler.GetMessagesByRoomID)
+
+		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
 		protected.POST("/chatrooms/:id/join", chatroomHandler.JoinChatRoom)
 		protected.POST("/chatrooms/:id/leave", chatroomHandler.LeaveChatRoom)
 
