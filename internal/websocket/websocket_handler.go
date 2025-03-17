@@ -20,6 +20,7 @@ import (
 type WSHandler struct {
 	chatroomService *services.ChatRoomService
 	messageService  *services.MessageService
+	userService     *services.UserService
 	clients         map[uint]*websocket.Conn
 	nc              *nats.Conn
 }
@@ -28,6 +29,7 @@ func NewWSHandler(
 	natsURL string,
 	chatroomService *services.ChatRoomService,
 	messageService *services.MessageService,
+	userService *services.UserService,
 ) *WSHandler {
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
@@ -39,6 +41,7 @@ func NewWSHandler(
 	return &WSHandler{
 		chatroomService: chatroomService,
 		messageService:  messageService,
+		userService:     userService,
 		clients:         make(map[uint]*websocket.Conn),
 		nc:              nc,
 	}
@@ -87,12 +90,39 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 		mutex.Lock()
 		delete(h.clients, userID.(uint))
 		mutex.Unlock()
+
+		// Set status to offline
+		_, err := h.userService.UpdateUser(
+			userID.(uint),
+			utils.UpdateUserRequest{Status: "offline"},
+		)
+		if err != nil {
+			log.Error(
+				"Failed to set user status to offline",
+				"userID",
+				userID.(uint),
+				"err",
+				err.Error(),
+			)
+		}
+
 		log.Info("Client disconnected", "id", userID.(uint))
 	}()
 
 	mutex.Lock()
 	h.clients[userID.(uint)] = conn
 	mutex.Unlock()
+
+	_, err = h.userService.UpdateUser(userID.(uint), utils.UpdateUserRequest{Status: "online"})
+	if err != nil {
+		log.Error(
+			"Failed to set user status to online",
+			"userID",
+			userID.(uint),
+			"err",
+			err.Error(),
+		)
+	}
 
 	log.Info("Client connected", "id", userID.(uint))
 

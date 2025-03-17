@@ -24,6 +24,7 @@ type UserResponse struct {
 	Username string `json:"username"            example:"john_doe"`
 	Email    string `json:"email"               example:"john@example.com"`
 	ImageURL string `json:"image_url,omitempty" example:"https://example.com/profile_picture.jpg"`
+	IsOnline bool   `json:"is_online"           example:"true"`
 }
 
 // GetUser godoc
@@ -59,6 +60,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		Username: user.Username,
 		Email:    user.Email,
 		ImageURL: user.ImageURL,
+		IsOnline: user.IsOnline,
 	}
 
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
@@ -76,7 +78,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 // @Failure      400  {object}  utils.ErrorResponse
 // @Failure      401  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
-// @Router       /v1/user [post]
+// @Router       /v1/user [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -104,6 +106,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		Username: updatedUser.Username,
 		Email:    updatedUser.Email,
 		ImageURL: updatedUser.ImageURL,
+		IsOnline: updatedUser.IsOnline,
 	}
 
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))

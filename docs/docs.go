@@ -667,7 +667,7 @@ const docTemplate = `{
                     }
                 }
             },
-            "post": {
+            "put": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -880,6 +880,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "https://example.com/profile_picture.jpg"
                 },
+                "is_online": {
+                    "type": "boolean",
+                    "example": true
+                },
                 "username": {
                     "type": "string",
                     "example": "john_doe"
@@ -947,6 +951,10 @@ const docTemplate = `{
                 "image_url": {
                     "type": "string",
                     "example": "https://example.com/profile_picture.jpg"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "online"
                 },
                 "username": {
                     "type": "string",

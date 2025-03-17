@@ -30,6 +30,9 @@ func (s *UserService) UpdateUser(id uint, data utils.UpdateUserRequest) (*models
 	if data.ImageURL != "" {
 		user.ImageURL = data.ImageURL
 	}
+	if data.Status != "" {
+		user.IsOnline = data.Status == "online"
+	}
 
 	err = s.userRepo.Update(user)
 	return user, err

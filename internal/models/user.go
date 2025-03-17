@@ -13,6 +13,7 @@ type User struct {
 	IsVerified       bool   `gorm:"default:false"`
 	VerificationCode string `gorm:"size:255"`
 	ImageURL         string `gorm:"varchar(100)"`
+	IsOnline         bool   `gorm:"default:false"`
 }
 
 func (u *User) BeforeSave(tx *gorm.DB) error {

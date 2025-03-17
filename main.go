@@ -101,7 +101,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userService)
 	chatroomHandler := handlers.NewChatRoomHandler(chatroomService, messageService)
-	wsHandler := websocket.NewWSHandler(cfg.NATSURL, chatroomService, messageService)
+	wsHandler := websocket.NewWSHandler(cfg.NATSURL, chatroomService, messageService, userService)
 	go wsHandler.StartBroadcaster()
 
 	router, err := graceful.Default()
