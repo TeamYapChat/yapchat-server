@@ -60,6 +60,9 @@ definitions:
     type: object
   handlers.UserResponse:
     properties:
+      created_at:
+        example: "1970-01-01T00:00:00Z"
+        type: string
       email:
         example: john@example.com
         type: string

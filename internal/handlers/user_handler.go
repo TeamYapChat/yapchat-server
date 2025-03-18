@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/gin-gonic/gin"
@@ -20,11 +21,12 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 
 // Response Structs
 type UserResponse struct {
-	ID       uint   `json:"id"                  example:"123"`
-	Username string `json:"username"            example:"john_doe"`
-	Email    string `json:"email"               example:"john@example.com"`
-	ImageURL string `json:"image_url,omitempty" example:"https://example.com/profile_picture.jpg"`
-	IsOnline bool   `json:"is_online"           example:"true"`
+	ID        uint   `json:"id"                  example:"123"`
+	Username  string `json:"username"            example:"john_doe"`
+	Email     string `json:"email"               example:"john@example.com"`
+	ImageURL  string `json:"image_url,omitempty" example:"https://example.com/profile_picture.jpg"`
+	IsOnline  bool   `json:"is_online"           example:"true"`
+	CreatedAt string `json:"created_at"          example:"1970-01-01T00:00:00Z"`
 }
 
 // GetUser godoc
@@ -56,11 +58,12 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	}
 
 	userResponse := UserResponse{
-		ID:       user.ID,
-		Username: user.Username,
-		Email:    user.Email,
-		ImageURL: user.ImageURL,
-		IsOnline: user.IsOnline,
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		ImageURL:  user.ImageURL,
+		IsOnline:  user.IsOnline,
+		CreatedAt: user.CreatedAt.Format(time.RFC3339),
 	}
 
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
@@ -102,11 +105,12 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	userResponse := UserResponse{
-		ID:       updatedUser.ID,
-		Username: updatedUser.Username,
-		Email:    updatedUser.Email,
-		ImageURL: updatedUser.ImageURL,
-		IsOnline: updatedUser.IsOnline,
+		ID:        updatedUser.ID,
+		Username:  updatedUser.Username,
+		Email:     updatedUser.Email,
+		ImageURL:  updatedUser.ImageURL,
+		IsOnline:  updatedUser.IsOnline,
+		CreatedAt: updatedUser.CreatedAt.Format(time.RFC3339),
 	}
 
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))

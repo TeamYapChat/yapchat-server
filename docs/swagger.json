@@ -861,6 +861,10 @@
         "handlers.UserResponse": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "1970-01-01T00:00:00Z"
+                },
                 "email": {
                     "type": "string",
                     "example": "john@example.com"
