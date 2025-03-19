@@ -538,6 +538,10 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -563,6 +567,10 @@ paths:
               type: object
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "500":
@@ -605,6 +613,10 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -612,6 +624,48 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update user profile
+      tags:
+      - users
+  /v1/user/{username}:
+    get:
+      description: Get details of a user using their username
+      parameters:
+      - description: Username of the user to retrieve
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user profile by username
       tags:
       - users
   /v1/ws:

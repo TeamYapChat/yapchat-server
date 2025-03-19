@@ -18,6 +18,10 @@ func (s *UserService) GetUserByID(id uint) (*models.User, error) {
 	return s.userRepo.FindByID(id)
 }
 
+func (s *UserService) GetUserByUsername(username string) (*models.User, error) {
+	return s.userRepo.FindByUsername(username)
+}
+
 func (s *UserService) UpdateUser(id uint, data utils.UpdateUserRequest) (*models.User, error) {
 	user, err := s.userRepo.FindByID(id)
 	if err != nil {

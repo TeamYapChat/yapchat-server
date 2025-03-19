@@ -132,6 +132,7 @@ func main() {
 	{
 		// User routes
 		protected.GET("/user", userHandler.GetUser)
+		protected.GET("/user/:username", userHandler.GetUserByUsername)
 		protected.PUT("/user", userHandler.UpdateUser)
 		protected.DELETE("/user", userHandler.DeleteUser)
 

@@ -21,12 +21,12 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 
 // Response Structs
 type UserResponse struct {
-	ID        uint   `json:"id"                  example:"123"`
-	Username  string `json:"username"            example:"john_doe"`
-	Email     string `json:"email"               example:"john@example.com"`
-	ImageURL  string `json:"image_url,omitempty" example:"https://example.com/profile_picture.jpg"`
-	IsOnline  bool   `json:"is_online"           example:"true"`
-	CreatedAt string `json:"created_at"          example:"1970-01-01T00:00:00Z"`
+	ID        uint   `json:"id"                   example:"123"`
+	Username  string `json:"username"             example:"john_doe"`
+	Email     string `json:"email,omitempty"      example:"john@example.com"`
+	ImageURL  string `json:"image_url,omitempty"  example:"https://example.com/profile_picture.jpg"`
+	IsOnline  bool   `json:"is_online"            example:"true"`
+	CreatedAt string `json:"created_at,omitempty" example:"1970-01-01T00:00:00Z"`
 }
 
 // GetUser godoc
@@ -37,6 +37,7 @@ type UserResponse struct {
 // @Produce      json
 // @Success      200  {object}  utils.SuccessResponse{data=UserResponse}
 // @Failure      401  {object}  utils.ErrorResponse
+// @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /v1/user [get]
 func (h *UserHandler) GetUser(c *gin.Context) {
@@ -44,16 +45,14 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	if !exists {
 		c.JSON(
 			http.StatusInternalServerError,
-			utils.NewErrorResponse("user ID not found in context"),
+			utils.NewErrorResponse("User ID not found in context"),
 		)
 		return
 	}
 
-	log.Debug("Current user ID", "userID", userID.(uint))
-
 	user, err := h.userService.GetUserByID(userID.(uint))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse(err.Error()))
+		c.JSON(http.StatusNotFound, utils.NewErrorResponse("User not found"))
 		return
 	}
 
@@ -64,6 +63,43 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		ImageURL:  user.ImageURL,
 		IsOnline:  user.IsOnline,
 		CreatedAt: user.CreatedAt.Format(time.RFC3339),
+	}
+
+	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
+}
+
+// GetUserByUsername godoc
+// @Summary      Get user profile by username
+// @Description  Get details of a user using their username
+// @Tags         users
+// @Security     ApiKeyAuth
+// @Produce      json
+// @Param        username path string true "Username of the user to retrieve"
+// @Success      200  {object}  utils.SuccessResponse{data=UserResponse}
+// @Failure      400  {object}  utils.ErrorResponse
+// @Failure      401  {object}  utils.ErrorResponse
+// @Failure      404  {object}  utils.ErrorResponse
+// @Failure      500  {object}  utils.ErrorResponse
+// @Router       /v1/user/{username} [get]
+func (h *UserHandler) GetUserByUsername(c *gin.Context) {
+	username := c.Param("username")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Username parameter not found"))
+		return
+	}
+
+	user, err := h.userService.GetUserByUsername(username)
+	if err != nil {
+		c.JSON(http.StatusNotFound, utils.NewErrorResponse("User not found"))
+		log.Error("Failed to find user by username", "username", username, "err", err.Error())
+		return
+	}
+
+	userResponse := UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		ImageURL: user.ImageURL,
+		IsOnline: user.IsOnline,
 	}
 
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
@@ -80,6 +116,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 // @Success      200  {object}  utils.SuccessResponse{data=UserResponse}
 // @Failure      400  {object}  utils.ErrorResponse
 // @Failure      401  {object}  utils.ErrorResponse
+// @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /v1/user [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
@@ -87,7 +124,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	if !exists {
 		c.JSON(
 			http.StatusInternalServerError,
-			utils.NewErrorResponse("user ID not found in context"),
+			utils.NewErrorResponse("User ID not found in context"),
 		)
 		return
 	}
@@ -100,7 +137,8 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	updatedUser, err := h.userService.UpdateUser(userID.(uint), requestBody)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse(err.Error()))
+		c.JSON(http.StatusNotFound, utils.NewErrorResponse("User not found"))
+		log.Error("Failed to update user", "userID", userID.(uint), "err", err.Error())
 		return
 	}
 
@@ -124,6 +162,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Produce      json
 // @Success      204  "No Content"
 // @Failure      401  {object}  utils.ErrorResponse
+// @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /v1/user [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
@@ -138,7 +177,8 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 
 	err := h.userService.DeleteUser(userID.(uint))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse(err.Error()))
+		c.JSON(http.StatusNotFound, utils.NewErrorResponse("User not found"))
+		log.Error("Failed to delete user", "userID", userID.(uint), "err", err.Error())
 		return
 	}
 
