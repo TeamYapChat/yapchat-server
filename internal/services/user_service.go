@@ -24,17 +24,21 @@ func (s *UserService) UpdateUser(id uint, data utils.UpdateUserRequest) (*models
 		return nil, err
 	}
 
+	user.Password = ""
+
 	if data.Username != "" {
 		user.Username = data.Username
+		err = s.userRepo.UpdateUsername(user)
 	}
 	if data.ImageURL != "" {
 		user.ImageURL = data.ImageURL
+		err = s.userRepo.UpdateImage(user)
 	}
 	if data.Status != "" {
 		user.IsOnline = data.Status == "online"
+		err = s.userRepo.UpdateStatus(user)
 	}
 
-	err = s.userRepo.Update(user)
 	return user, err
 }
 

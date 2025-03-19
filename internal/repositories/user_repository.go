@@ -9,6 +9,9 @@ import (
 type UserRepository interface {
 	Create(user *models.User) error
 	Update(user *models.User) error
+	UpdateStatus(user *models.User) error
+	UpdateImage(user *models.User) error
+	UpdateUsername(user *models.User) error
 	FindByID(id uint) (*models.User, error)
 	FindByEmail(email string) (*models.User, error)
 	FindByUsername(username string) (*models.User, error)
@@ -30,6 +33,27 @@ func (r *MySQLUserRepository) Create(user *models.User) error {
 
 func (r *MySQLUserRepository) Update(user *models.User) error {
 	return r.db.Save(user).Error
+}
+
+func (r *MySQLUserRepository) UpdateImage(user *models.User) error {
+	return r.db.Model(&models.User{}).
+		Where("id = ?", user.ID).
+		Update("image_url", user.ImageURL).
+		Error
+}
+
+func (r *MySQLUserRepository) UpdateStatus(user *models.User) error {
+	return r.db.Model(&models.User{}).
+		Where("id = ?", user.ID).
+		Update("is_online", user.IsOnline).
+		Error
+}
+
+func (r *MySQLUserRepository) UpdateUsername(user *models.User) error {
+	return r.db.Model(&models.User{}).
+		Where("id = ?", user.ID).
+		Update("username", user.Username).
+		Error
 }
 
 func (r *MySQLUserRepository) FindByID(id uint) (*models.User, error) {
