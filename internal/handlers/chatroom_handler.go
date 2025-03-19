@@ -43,7 +43,7 @@ type MessageResponse struct {
 	Timestamp string `json:"timestamp"`
 }
 
-// CreateChatRoom godoc
+// CreateHandler godoc
 // @Summary      Create a new chat room
 // @Description  Create a new chat room
 // @Tags         chatrooms
@@ -54,7 +54,7 @@ type MessageResponse struct {
 // @Failure      400 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms [post]
-func (h *ChatRoomHandler) CreateChatRoom(c *gin.Context) {
+func (h *ChatRoomHandler) CreateHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
@@ -69,7 +69,7 @@ func (h *ChatRoomHandler) CreateChatRoom(c *gin.Context) {
 
 	chatroomRequest.ParticipantIDs = append(chatroomRequest.ParticipantIDs, userID.(uint))
 
-	if err := h.chatroomService.CreateChatRoom(&chatroomRequest); err != nil {
+	if err := h.chatroomService.Create(&chatroomRequest); err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to create chat room"))
 		return
 	}
@@ -77,7 +77,7 @@ func (h *ChatRoomHandler) CreateChatRoom(c *gin.Context) {
 	c.JSON(http.StatusCreated, utils.NewSuccessResponse("Chat room created successfully"))
 }
 
-// GetChatRoomByID godoc
+// GetByIDHandler godoc
 // @Summary      Get chat room by ID
 // @Description  Get chat room by ID
 // @Tags         chatrooms
@@ -88,7 +88,7 @@ func (h *ChatRoomHandler) CreateChatRoom(c *gin.Context) {
 // @Failure      404 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms/{id} [get]
-func (h *ChatRoomHandler) GetChatRoomByID(c *gin.Context) {
+func (h *ChatRoomHandler) GetByIDHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
@@ -103,7 +103,7 @@ func (h *ChatRoomHandler) GetChatRoomByID(c *gin.Context) {
 	}
 	id := uint(idUint64)
 
-	chatroom, err := h.chatroomService.GetChatRoomByID(id)
+	chatroom, err := h.chatroomService.GetByID(id)
 	if err != nil {
 		if errors.Is(err, services.ErrChatRoomNotFound) {
 			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
@@ -130,7 +130,7 @@ func (h *ChatRoomHandler) GetChatRoomByID(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(response))
 }
 
-// GetMessagesByRoomID godoc
+// GetMessagesByRoomIDHandler godoc
 // @Summary      Get messages by chat room ID
 // @Description  Get messages for a specific chat room
 // @Tags         chatrooms
@@ -144,7 +144,7 @@ func (h *ChatRoomHandler) GetChatRoomByID(c *gin.Context) {
 // @Failure      404 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms/{id}/messages [get]
-func (h *ChatRoomHandler) GetMessagesByRoomID(c *gin.Context) {
+func (h *ChatRoomHandler) GetMessagesByRoomIDHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
@@ -164,7 +164,7 @@ func (h *ChatRoomHandler) GetMessagesByRoomID(c *gin.Context) {
 		count = 25
 	}
 
-	chatroom, err := h.chatroomService.GetChatRoomByID(id)
+	chatroom, err := h.chatroomService.GetByID(id)
 	if err != nil {
 		if errors.Is(err, services.ErrChatRoomNotFound) {
 			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
@@ -197,7 +197,7 @@ func (h *ChatRoomHandler) GetMessagesByRoomID(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(messageList))
 }
 
-// ListChatRooms godoc
+// ListChatroomsHandler godoc
 // @Summary      List all chat rooms
 // @Description  Get a list of all chat rooms that the user is in
 // @Tags         chatrooms
@@ -205,14 +205,14 @@ func (h *ChatRoomHandler) GetMessagesByRoomID(c *gin.Context) {
 // @Success      200 {object} utils.SuccessResponse{data=[]ChatRoomResponse}
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms [get]
-func (h *ChatRoomHandler) ListChatRooms(c *gin.Context) {
+func (h *ChatRoomHandler) ListChatroomsHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
 		return
 	}
 
-	chatrooms, err := h.chatroomService.ListChatRooms(userID.(uint))
+	chatrooms, err := h.chatroomService.List(userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to list chat rooms"))
 		return
@@ -233,7 +233,7 @@ func (h *ChatRoomHandler) ListChatRooms(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(responses))
 }
 
-// JoinChatRoom godoc
+// JoinChatroomHandler godoc
 // @Summary      Join chat room by ID
 // @Description  Join chat room by ID
 // @Tags         chatrooms
@@ -244,7 +244,7 @@ func (h *ChatRoomHandler) ListChatRooms(c *gin.Context) {
 // @Failure      404 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms/{id}/join [post]
-func (h *ChatRoomHandler) JoinChatRoom(c *gin.Context) {
+func (h *ChatRoomHandler) JoinChatroomHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
@@ -259,7 +259,7 @@ func (h *ChatRoomHandler) JoinChatRoom(c *gin.Context) {
 	}
 	chatroomID := uint(idUint64)
 
-	err = h.chatroomService.AddParticipantToChatRoom(chatroomID, userID.(uint))
+	err = h.chatroomService.AddParticipant(chatroomID, userID.(uint))
 	if err != nil {
 		if errors.Is(err, services.ErrChatRoomNotFound) {
 			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
@@ -272,7 +272,7 @@ func (h *ChatRoomHandler) JoinChatRoom(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse("Successfully joined chat room"))
 }
 
-// LeaveChatRoom godoc
+// LeaveChatroomHandler godoc
 // @Summary      Leave chat room by ID
 // @Description  Leave chat room by ID
 // @Tags         chatrooms
@@ -283,7 +283,7 @@ func (h *ChatRoomHandler) JoinChatRoom(c *gin.Context) {
 // @Failure      404 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms/{id}/leave [post]
-func (h *ChatRoomHandler) LeaveChatRoom(c *gin.Context) {
+func (h *ChatRoomHandler) LeaveChatroomHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
@@ -300,7 +300,7 @@ func (h *ChatRoomHandler) LeaveChatRoom(c *gin.Context) {
 
 	// TODO: Only remove user that exists in chat room
 
-	err = h.chatroomService.RemoveParticipantFromChatRoom(chatroomID, userID.(uint))
+	err = h.chatroomService.RemoveParticipant(chatroomID, userID.(uint))
 	if err != nil {
 		if errors.Is(err, services.ErrChatRoomNotFound) {
 			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))

@@ -92,7 +92,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 		mutex.Unlock()
 
 		// Set status to offline
-		_, err := h.userService.UpdateUser(
+		_, err := h.userService.Update(
 			userID.(uint),
 			utils.UpdateUserRequest{Status: "offline"},
 		)
@@ -113,7 +113,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 	h.clients[userID.(uint)] = conn
 	mutex.Unlock()
 
-	_, err = h.userService.UpdateUser(userID.(uint), utils.UpdateUserRequest{Status: "online"})
+	_, err = h.userService.Update(userID.(uint), utils.UpdateUserRequest{Status: "online"})
 	if err != nil {
 		log.Error(
 			"Failed to set user status to online",
@@ -195,7 +195,7 @@ func (h *WSHandler) StartBroadcaster() {
 
 		log.Debug("Received NATS message", "msg", msg)
 
-		chatroom, err := h.chatroomService.GetChatRoomByID(msg.RoomID)
+		chatroom, err := h.chatroomService.GetByID(msg.RoomID)
 		if err != nil {
 			log.Error("Error finding chatroom", "chatroomID", msg.RoomID, "err", err.Error())
 			return

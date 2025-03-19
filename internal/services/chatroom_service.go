@@ -13,18 +13,18 @@ import (
 var ErrChatRoomNotFound = errors.New("chat room not found")
 
 type ChatRoomService struct {
-	repo     *repositories.ChatRoomRepository
-	userRepo repositories.UserRepository
+	chatroomRepo *repositories.ChatRoomRepository
+	userRepo     repositories.UserRepository
 }
 
 func NewChatRoomService(
-	repo *repositories.ChatRoomRepository,
+	chatroomRepo *repositories.ChatRoomRepository,
 	userRepo repositories.UserRepository,
 ) *ChatRoomService {
-	return &ChatRoomService{repo: repo, userRepo: userRepo}
+	return &ChatRoomService{chatroomRepo: chatroomRepo, userRepo: userRepo}
 }
 
-func (s *ChatRoomService) CreateChatRoom(chatroomReq *models.ChatRoomRequest) error {
+func (s *ChatRoomService) Create(chatroomReq *models.ChatRoomRequest) error {
 	var participants []*models.User
 	for _, id := range chatroomReq.ParticipantIDs {
 		user, err := s.userRepo.FindByID(id)
@@ -48,11 +48,11 @@ func (s *ChatRoomService) CreateChatRoom(chatroomReq *models.ChatRoomRequest) er
 		Participants: participants,
 	}
 
-	return s.repo.Create(&chatroom)
+	return s.chatroomRepo.Create(&chatroom)
 }
 
-func (s *ChatRoomService) GetChatRoomByID(id uint) (*models.ChatRoom, error) {
-	chatroom, err := s.repo.GetByID(id)
+func (s *ChatRoomService) GetByID(id uint) (*models.ChatRoom, error) {
+	chatroom, err := s.chatroomRepo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrChatRoomNotFound
@@ -62,26 +62,26 @@ func (s *ChatRoomService) GetChatRoomByID(id uint) (*models.ChatRoom, error) {
 	return chatroom, nil
 }
 
-func (s *ChatRoomService) ListChatRooms(userID uint) ([]*models.ChatRoom, error) {
-	return s.repo.List(userID)
+func (s *ChatRoomService) List(userID uint) ([]*models.ChatRoom, error) {
+	return s.chatroomRepo.List(userID)
 }
 
-func (s *ChatRoomService) UpdateChatRoom(chatroom *models.ChatRoom) error {
+func (s *ChatRoomService) Update(chatroom *models.ChatRoom) error {
 	// Add business logic/validation here if needed
-	return s.repo.Update(chatroom)
+	return s.chatroomRepo.Update(chatroom)
 }
 
-func (s *ChatRoomService) DeleteChatRoom(id uint) error {
+func (s *ChatRoomService) Delete(id uint) error {
 	// Add business logic/validation here if needed
-	return s.repo.Delete(id)
+	return s.chatroomRepo.Delete(id)
 }
 
-func (s *ChatRoomService) AddParticipantToChatRoom(chatroomID uint, userID uint) error {
+func (s *ChatRoomService) AddParticipant(chatroomID uint, userID uint) error {
 	// Add business logic/validation here if needed
-	return s.repo.AddParticipant(chatroomID, userID)
+	return s.chatroomRepo.AddParticipant(chatroomID, userID)
 }
 
-func (s *ChatRoomService) RemoveParticipantFromChatRoom(chatroomID uint, userID uint) error {
+func (s *ChatRoomService) RemoveParticipant(chatroomID uint, userID uint) error {
 	// Add business logic/validation here if needed
-	return s.repo.RemoveParticipant(chatroomID, userID)
+	return s.chatroomRepo.RemoveParticipant(chatroomID, userID)
 }

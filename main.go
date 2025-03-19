@@ -131,19 +131,19 @@ func main() {
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret), limiter.Middleware("protected"))
 	{
 		// User routes
-		protected.GET("/user", userHandler.GetUser)
-		protected.GET("/user/:username", userHandler.GetUserByUsername)
-		protected.PUT("/user", userHandler.UpdateUser)
-		protected.DELETE("/user", userHandler.DeleteUser)
+		protected.GET("/user", userHandler.GetHandler)
+		protected.GET("/user/:username", userHandler.GetByUsernameHandler)
+		protected.PUT("/user", userHandler.UpdateHandler)
+		protected.DELETE("/user", userHandler.DeleteHandler)
 
 		// Chatroom routes
-		protected.GET("/chatrooms", chatroomHandler.ListChatRooms)
-		protected.GET("/chatrooms/:id", chatroomHandler.GetChatRoomByID)
-		protected.GET("/chatrooms/:id/messages", chatroomHandler.GetMessagesByRoomID)
+		protected.GET("/chatrooms", chatroomHandler.ListChatroomsHandler)
+		protected.GET("/chatrooms/:id", chatroomHandler.GetByIDHandler)
+		protected.GET("/chatrooms/:id/messages", chatroomHandler.GetMessagesByRoomIDHandler)
 
-		protected.POST("/chatrooms", chatroomHandler.CreateChatRoom)
-		protected.POST("/chatrooms/:id/join", chatroomHandler.JoinChatRoom)
-		protected.POST("/chatrooms/:id/leave", chatroomHandler.LeaveChatRoom)
+		protected.POST("/chatrooms", chatroomHandler.CreateHandler)
+		protected.POST("/chatrooms/:id/join", chatroomHandler.JoinChatroomHandler)
+		protected.POST("/chatrooms/:id/leave", chatroomHandler.LeaveChatroomHandler)
 
 		// Websocket routes
 		protected.GET("/ws", wsHandler.WebSocketHandler)

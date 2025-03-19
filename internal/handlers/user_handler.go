@@ -29,7 +29,7 @@ type UserResponse struct {
 	CreatedAt string `json:"created_at,omitempty" example:"1970-01-01T00:00:00Z"`
 }
 
-// GetUser godoc
+// GetHandler godoc
 // @Summary      Get user profile
 // @Description  Get details of the currently authenticated user
 // @Tags         users
@@ -40,7 +40,7 @@ type UserResponse struct {
 // @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /v1/user [get]
-func (h *UserHandler) GetUser(c *gin.Context) {
+func (h *UserHandler) GetHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(
@@ -50,7 +50,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.GetUserByID(userID.(uint))
+	user, err := h.userService.GetByID(userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusNotFound, utils.NewErrorResponse("User not found"))
 		return
@@ -68,7 +68,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
 }
 
-// GetUserByUsername godoc
+// GetByUsernameHandler godoc
 // @Summary      Get user profile by username
 // @Description  Get details of a user using their username
 // @Tags         users
@@ -81,14 +81,14 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 // @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /v1/user/{username} [get]
-func (h *UserHandler) GetUserByUsername(c *gin.Context) {
+func (h *UserHandler) GetByUsernameHandler(c *gin.Context) {
 	username := c.Param("username")
 	if username == "" {
 		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Username parameter not found"))
 		return
 	}
 
-	user, err := h.userService.GetUserByUsername(username)
+	user, err := h.userService.GetByUsername(username)
 	if err != nil {
 		c.JSON(http.StatusNotFound, utils.NewErrorResponse("User not found"))
 		log.Error("Failed to find user by username", "username", username, "err", err.Error())
@@ -105,7 +105,7 @@ func (h *UserHandler) GetUserByUsername(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
 }
 
-// UpdateUser godoc
+// UpdateHandler godoc
 // @Summary      Update user profile
 // @Description  Update details of the currently authenticated user
 // @Tags         users
@@ -119,7 +119,7 @@ func (h *UserHandler) GetUserByUsername(c *gin.Context) {
 // @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /v1/user [put]
-func (h *UserHandler) UpdateUser(c *gin.Context) {
+func (h *UserHandler) UpdateHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(
@@ -135,7 +135,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	updatedUser, err := h.userService.UpdateUser(userID.(uint), requestBody)
+	updatedUser, err := h.userService.Update(userID.(uint), requestBody)
 	if err != nil {
 		c.JSON(http.StatusNotFound, utils.NewErrorResponse("User not found"))
 		log.Error("Failed to update user", "userID", userID.(uint), "err", err.Error())
@@ -154,7 +154,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(userResponse))
 }
 
-// DeleteUser godoc
+// DeleteHandler godoc
 // @Summary      Delete user profile
 // @Description  Delete the currently authenticated user's profile
 // @Tags         users
@@ -165,7 +165,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
 // @Router       /v1/user [delete]
-func (h *UserHandler) DeleteUser(c *gin.Context) {
+func (h *UserHandler) DeleteHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(
@@ -175,7 +175,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err := h.userService.DeleteUser(userID.(uint))
+	err := h.userService.Delete(userID.(uint))
 	if err != nil {
 		c.JSON(http.StatusNotFound, utils.NewErrorResponse("User not found"))
 		log.Error("Failed to delete user", "userID", userID.(uint), "err", err.Error())

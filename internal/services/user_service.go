@@ -14,15 +14,15 @@ func NewUserService(userRepo repositories.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
-func (s *UserService) GetUserByID(id uint) (*models.User, error) {
+func (s *UserService) GetByID(id uint) (*models.User, error) {
 	return s.userRepo.FindByID(id)
 }
 
-func (s *UserService) GetUserByUsername(username string) (*models.User, error) {
+func (s *UserService) GetByUsername(username string) (*models.User, error) {
 	return s.userRepo.FindByUsername(username)
 }
 
-func (s *UserService) UpdateUser(id uint, data utils.UpdateUserRequest) (*models.User, error) {
+func (s *UserService) Update(id uint, data utils.UpdateUserRequest) (*models.User, error) {
 	user, err := s.userRepo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -46,6 +46,6 @@ func (s *UserService) UpdateUser(id uint, data utils.UpdateUserRequest) (*models
 	return user, err
 }
 
-func (s *UserService) DeleteUser(id uint) error {
+func (s *UserService) Delete(id uint) error {
 	return s.userRepo.Delete(id)
 }
