@@ -31,15 +31,15 @@ func NewChatRoomHandler(
 
 // ChatRoomResponse defines the response structure for chat room related API calls
 type ChatRoomResponse struct {
-	ID             uint   `json:"id"`
-	Name           string `json:"name"`
-	Type           string `json:"type"`
-	ParticipantIDs []uint `json:"participant_ids"`
+	ID           uint           `json:"id"`
+	Name         string         `json:"name"`
+	Type         string         `json:"type"`
+	Participants []UserResponse `json:"participants"`
 }
 
 type MessageResponse struct {
 	Content   string `json:"content"`
-	SenderID  uint   `json:"sender_id"`
+	SenderID  string `json:"sender_id"`
 	Timestamp string `json:"timestamp"`
 }
 
@@ -67,7 +67,7 @@ func (h *ChatRoomHandler) CreateHandler(c *gin.Context) {
 		return
 	}
 
-	chatroomRequest.ParticipantIDs = append(chatroomRequest.ParticipantIDs, userID.(uint))
+	chatroomRequest.ParticipantIDs = append(chatroomRequest.ParticipantIDs, userID.(string))
 
 	if err := h.chatroomService.Create(&chatroomRequest); err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to create chat room"))
@@ -113,18 +113,16 @@ func (h *ChatRoomHandler) GetByIDHandler(c *gin.Context) {
 		return
 	}
 
-	userIDList := getParticipantIDs(chatroom.Participants)
-
-	if !slices.Contains(userIDList, userID.(uint)) {
+	if !slices.Contains(getParticipantIDs(chatroom.Participants), userID.(string)) {
 		c.JSON(http.StatusForbidden, utils.NewErrorResponse("User not in chat room"))
 		return
 	}
 
 	response := ChatRoomResponse{
-		ID:             chatroom.ID,
-		Name:           chatroom.Name,
-		Type:           string(chatroom.Type),
-		ParticipantIDs: userIDList,
+		ID:           chatroom.ID,
+		Name:         chatroom.Name,
+		Type:         string(chatroom.Type),
+		Participants: getParticipants(chatroom.Participants),
 	}
 
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(response))
@@ -174,7 +172,7 @@ func (h *ChatRoomHandler) GetMessagesByRoomIDHandler(c *gin.Context) {
 		return
 	}
 
-	if !slices.Contains(getParticipantIDs(chatroom.Participants), userID.(uint)) {
+	if !slices.Contains(getParticipantIDs(chatroom.Participants), userID.(string)) {
 		c.JSON(http.StatusForbidden, utils.NewErrorResponse("User not in chat room"))
 		return
 	}
@@ -212,7 +210,7 @@ func (h *ChatRoomHandler) ListChatroomsHandler(c *gin.Context) {
 		return
 	}
 
-	chatrooms, err := h.chatroomService.List(userID.(uint))
+	chatrooms, err := h.chatroomService.List(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to list chat rooms"))
 		return
@@ -220,13 +218,13 @@ func (h *ChatRoomHandler) ListChatroomsHandler(c *gin.Context) {
 
 	var responses []ChatRoomResponse
 	for _, chatroom := range chatrooms {
-		userIDList := getParticipantIDs(chatroom.Participants)
+		participants := getParticipants(chatroom.Participants)
 
 		responses = append(responses, ChatRoomResponse{
-			ID:             chatroom.ID,
-			Name:           chatroom.Name,
-			Type:           string(chatroom.Type),
-			ParticipantIDs: userIDList,
+			ID:           chatroom.ID,
+			Name:         chatroom.Name,
+			Type:         string(chatroom.Type),
+			Participants: participants,
 		})
 	}
 
@@ -259,7 +257,7 @@ func (h *ChatRoomHandler) JoinChatroomHandler(c *gin.Context) {
 	}
 	chatroomID := uint(idUint64)
 
-	err = h.chatroomService.AddParticipant(chatroomID, userID.(uint))
+	err = h.chatroomService.AddParticipant(chatroomID, userID.(string))
 	if err != nil {
 		if errors.Is(err, services.ErrChatRoomNotFound) {
 			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
@@ -300,7 +298,7 @@ func (h *ChatRoomHandler) LeaveChatroomHandler(c *gin.Context) {
 
 	// TODO: Only remove user that exists in chat room
 
-	err = h.chatroomService.RemoveParticipant(chatroomID, userID.(uint))
+	err = h.chatroomService.RemoveParticipant(chatroomID, userID.(string))
 	if err != nil {
 		if errors.Is(err, services.ErrChatRoomNotFound) {
 			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
@@ -313,8 +311,21 @@ func (h *ChatRoomHandler) LeaveChatroomHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse("Successfully left chat room"))
 }
 
-func getParticipantIDs(participants []*models.User) []uint {
-	ids := make([]uint, 0, len(participants))
+func getParticipants(participants []*models.User) []UserResponse {
+	users := make([]UserResponse, 0, len(participants))
+	for _, p := range participants {
+		users = append(users, UserResponse{
+			ID:       p.ID,
+			Username: p.Username,
+			ImageURL: p.ImageURL,
+			IsOnline: p.IsOnline,
+		})
+	}
+	return users
+}
+
+func getParticipantIDs(participants []*models.User) []string {
+	ids := make([]string, 0, len(participants))
 	for _, p := range participants {
 		ids = append(ids, p.ID)
 	}

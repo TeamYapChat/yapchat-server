@@ -62,7 +62,7 @@ func (s *ChatRoomService) GetByID(id uint) (*models.ChatRoom, error) {
 	return chatroom, nil
 }
 
-func (s *ChatRoomService) List(userID uint) ([]*models.ChatRoom, error) {
+func (s *ChatRoomService) List(userID string) ([]*models.ChatRoom, error) {
 	return s.chatroomRepo.List(userID)
 }
 
@@ -76,12 +76,12 @@ func (s *ChatRoomService) Delete(id uint) error {
 	return s.chatroomRepo.Delete(id)
 }
 
-func (s *ChatRoomService) AddParticipant(chatroomID uint, userID uint) error {
+func (s *ChatRoomService) AddParticipant(chatroomID uint, userID string) error {
 	// Add business logic/validation here if needed
 	return s.chatroomRepo.AddParticipant(chatroomID, userID)
 }
 
-func (s *ChatRoomService) RemoveParticipant(chatroomID uint, userID uint) error {
+func (s *ChatRoomService) RemoveParticipant(chatroomID uint, userID string) error {
 	// Add business logic/validation here if needed
 	return s.chatroomRepo.RemoveParticipant(chatroomID, userID)
 }

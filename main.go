@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/gin-contrib/graceful"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/mysql"
@@ -42,7 +44,6 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 		&models.User{},
 		&models.ChatRoom{},
 		&models.Message{},
-		&models.RefreshToken{},
 	); err != nil {
 		return nil, err
 	}
@@ -52,6 +53,15 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(25)
 
 	return db, nil
+}
+
+func InitRedis(redisURL string) (*redis.Client, error) {
+	opts, err := redis.ParseURL(redisURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return redis.NewClient(opts), nil
 }
 
 // @title           YapChat API
@@ -65,42 +75,44 @@ func InitDB(cfg config.Config) (*gorm.DB, error) {
 func main() {
 	cfg := config.LoadConfig()
 
+	// Initialize databases
 	db, err := InitDB(cfg)
 	if err != nil {
 		log.Fatal("Failed to initialize database", "err", err.Error())
 	}
 	log.Info("Successfully initialized database")
 
-	// Middlewares
-	limiter := middleware.NewRateLimiter(cfg.RedisURL)
+	redisClient, err := InitRedis(cfg.RedisURL)
+	if err != nil {
+		log.Fatal("Failed to parse Redis URL", "url", cfg.RedisURL, "err", err.Error())
+	}
+	log.Info("Successfully connected to Redis")
 
-	limiter.AddLimiter("auth", middleware.RateLimitConfig{
-		Limit:  5,
-		Window: time.Minute,
-	})
+	// Middlewares
+	limiter := middleware.NewRateLimiter(redisClient)
 
 	limiter.AddLimiter("protected", middleware.RateLimitConfig{
 		Limit:  5,
 		Window: time.Second,
 	})
 
+	clerk.SetKey(cfg.ClerkSecret)
+	store := middleware.NewJWKStore(cfg.ClerkSecret, redisClient)
+
 	// Repos
 	userRepo := repositories.NewUserRepository(db)
-	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
 	chatroomRepo := repositories.NewChatRoomRepository(db)
 	messageRepo := repositories.NewMessageRepository(db)
 
 	// Services
-	mailerService := services.NewMailerSendService(cfg.MailerSendAPIKey, cfg.EmailTemplateID)
-	authService := services.NewAuthService(userRepo, refreshTokenRepo, mailerService, cfg.JWTSecret)
 	userService := services.NewUserService(userRepo)
 	chatroomService := services.NewChatRoomService(chatroomRepo, userRepo)
 	messageService := services.NewMessageService(messageRepo)
 
 	// Handlers
-	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userService)
 	chatroomHandler := handlers.NewChatRoomHandler(chatroomService, messageService)
+	webhookHandler := handlers.NewWebhookHandler(cfg.SigningSecret, userService)
 	wsHandler := websocket.NewWSHandler(cfg.NATSURL, chatroomService, messageService, userService)
 	go wsHandler.StartBroadcaster()
 
@@ -115,26 +127,14 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	public := router.Group("/auth")
-	public.Use(limiter.Middleware("auth"))
-	{
-		public.GET("/verify-email", authHandler.VerifyEmailHandler)
-		public.GET("/validate", authHandler.ValidateTokenHandler)
-
-		public.POST("/register", authHandler.RegisterHandler)
-		public.POST("/login", authHandler.LoginHandler)
-		public.POST("/send-verification-email", authHandler.SendEmailHandler)
-		public.POST("/refresh", authHandler.RefreshTokenHandler)
-	}
+	router.POST("/webhook", webhookHandler.WebhookHandler)
 
 	protected := router.Group("/v1")
-	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret), limiter.Middleware("protected"))
+	protected.Use(middleware.AuthMiddleware(store), limiter.Middleware("protected"))
 	{
 		// User routes
 		protected.GET("/user", userHandler.GetHandler)
 		protected.GET("/user/:username", userHandler.GetByUsernameHandler)
-		protected.PUT("/user", userHandler.UpdateHandler)
-		protected.DELETE("/user", userHandler.DeleteHandler)
 
 		// Chatroom routes
 		protected.GET("/chatrooms", chatroomHandler.ListChatroomsHandler)

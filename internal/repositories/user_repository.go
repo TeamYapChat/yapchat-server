@@ -12,11 +12,9 @@ type UserRepository interface {
 	UpdateStatus(user *models.User) error
 	UpdateImage(user *models.User) error
 	UpdateUsername(user *models.User) error
-	FindByID(id uint) (*models.User, error)
-	FindByEmail(email string) (*models.User, error)
+	FindByID(id string) (*models.User, error)
 	FindByUsername(username string) (*models.User, error)
-	FindByVerificationCode(code string) (*models.User, error)
-	Delete(id uint) error
+	Delete(id string) error
 }
 
 type MySQLUserRepository struct {
@@ -56,16 +54,9 @@ func (r *MySQLUserRepository) UpdateUsername(user *models.User) error {
 		Error
 }
 
-func (r *MySQLUserRepository) FindByID(id uint) (*models.User, error) {
+func (r *MySQLUserRepository) FindByID(id string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("id = ?", id).First(&user).Error
-
-	return &user, err
-}
-
-func (r *MySQLUserRepository) FindByEmail(email string) (*models.User, error) {
-	var user models.User
-	err := r.db.Where("email = ?", email).First(&user).Error
 
 	return &user, err
 }
@@ -77,13 +68,7 @@ func (r *MySQLUserRepository) FindByUsername(username string) (*models.User, err
 	return &user, err
 }
 
-func (r *MySQLUserRepository) FindByVerificationCode(code string) (*models.User, error) {
-	var user models.User
-	err := r.db.Where("verification_code = ?", code).First(&user).Error
-	return &user, err
-}
-
-func (r *MySQLUserRepository) Delete(id uint) error {
+func (r *MySQLUserRepository) Delete(id string) error {
 	var user models.User
 	err := r.db.Where("id = ?", id).Delete(&user).Error
 

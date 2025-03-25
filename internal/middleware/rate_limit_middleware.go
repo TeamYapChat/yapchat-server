@@ -21,15 +21,9 @@ type RateLimitConfig struct {
 	Window time.Duration
 }
 
-func NewRateLimiter(redisURL string) *RateLimiter {
-	opts, err := redis.ParseURL(redisURL)
-	if err != nil {
-		log.Fatal("Failed to parse Redis URL", "url", redisURL, "err", err.Error())
-	}
-	log.Info("Successfully connected to Redis")
-
+func NewRateLimiter(redisClient *redis.Client) *RateLimiter {
 	return &RateLimiter{
-		client:   redis.NewClient(opts),
+		client:   redisClient,
 		limiters: make(map[string]RateLimitConfig),
 	}
 }

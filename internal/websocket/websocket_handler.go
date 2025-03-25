@@ -21,7 +21,7 @@ type WSHandler struct {
 	chatroomService *services.ChatRoomService
 	messageService  *services.MessageService
 	userService     *services.UserService
-	clients         map[uint]*websocket.Conn
+	clients         map[string]*websocket.Conn
 	nc              *nats.Conn
 }
 
@@ -42,7 +42,7 @@ func NewWSHandler(
 		chatroomService: chatroomService,
 		messageService:  messageService,
 		userService:     userService,
-		clients:         make(map[uint]*websocket.Conn),
+		clients:         make(map[string]*websocket.Conn),
 		nc:              nc,
 	}
 }
@@ -59,7 +59,7 @@ var mutex sync.Mutex
 
 type Message struct {
 	Content   string `json:"content"             binding:"required"`
-	SenderID  uint   `json:"sender_id,omitempty"`
+	SenderID  string `json:"sender_id,omitempty"`
 	RoomID    uint   `json:"room_id"             binding:"required"`
 	Timestamp string `json:"timestamp,omitempty"`
 	Type      string `json:"type,omitempty"`
@@ -88,49 +88,49 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 	defer func() {
 		conn.Close()
 		mutex.Lock()
-		delete(h.clients, userID.(uint))
+		delete(h.clients, userID.(string))
 		mutex.Unlock()
 
 		// Set status to offline
 		_, err := h.userService.Update(
-			userID.(uint),
+			userID.(string),
 			utils.UpdateUserRequest{Status: "offline"},
 		)
 		if err != nil {
 			log.Error(
 				"Failed to set user status to offline",
 				"userID",
-				userID.(uint),
+				userID.(string),
 				"err",
 				err.Error(),
 			)
 		}
 
-		log.Info("Client disconnected", "id", userID.(uint))
+		log.Info("Client disconnected", "id", userID.(string))
 	}()
 
 	mutex.Lock()
-	h.clients[userID.(uint)] = conn
+	h.clients[userID.(string)] = conn
 	mutex.Unlock()
 
-	_, err = h.userService.Update(userID.(uint), utils.UpdateUserRequest{Status: "online"})
+	_, err = h.userService.Update(userID.(string), utils.UpdateUserRequest{Status: "online"})
 	if err != nil {
 		log.Error(
 			"Failed to set user status to online",
 			"userID",
-			userID.(uint),
+			userID.(string),
 			"err",
 			err.Error(),
 		)
 	}
 
-	log.Info("Client connected", "id", userID.(uint))
+	log.Info("Client connected", "id", userID.(string))
 
 	// Handle panics in connection handler
 	defer func() {
 		if r := recover(); r != nil {
 			log.Error("WebSocket panic recovered",
-				"userID", userID.(uint),
+				"userID", userID.(string),
 				"panic", r,
 				"stack", string(debug.Stack()))
 		}
@@ -144,7 +144,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 				websocket.CloseGoingAway,
 				websocket.CloseNormalClosure) {
 				log.Warn("Unexpected WebSocket closure",
-					"userID", userID.(uint),
+					"userID", userID.(string),
 					"err", err.Error())
 			}
 			break
@@ -152,7 +152,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 
 		log.Debug("Received message", "msg", msg)
 
-		msg.SenderID = userID.(uint)
+		msg.SenderID = userID.(string)
 		msg.Timestamp = time.Now().Format(time.RFC3339)
 		msg.Type = "message"
 
@@ -206,7 +206,7 @@ func (h *WSHandler) StartBroadcaster() {
 			return
 		}
 
-		recipientIDs := make([]uint, 0, len(chatroom.Participants))
+		recipientIDs := make([]string, 0, len(chatroom.Participants))
 		for _, participant := range chatroom.Participants {
 			recipientIDs = append(recipientIDs, participant.ID)
 		}

@@ -27,7 +27,7 @@ func (r *ChatRoomRepository) GetByID(id uint) (*models.ChatRoom, error) {
 	return &chatroom, nil
 }
 
-func (r *ChatRoomRepository) List(userID uint) ([]*models.ChatRoom, error) {
+func (r *ChatRoomRepository) List(userID string) ([]*models.ChatRoom, error) {
 	var chatrooms []*models.ChatRoom
 	err := r.db.Preload("Participants").
 		Joins("JOIN chat_room_participants ON chat_rooms.id = chat_room_participants.chat_room_id").
@@ -47,20 +47,20 @@ func (r *ChatRoomRepository) Delete(id uint) error {
 	return r.db.Delete(&models.ChatRoom{}, id).Error
 }
 
-func (r *ChatRoomRepository) AddParticipant(chatroomID uint, userID uint) error {
+func (r *ChatRoomRepository) AddParticipant(chatroomID uint, userID string) error {
 	chatroom, err := r.GetByID(chatroomID)
 	if err != nil {
 		return err
 	}
-	user := &models.User{Model: gorm.Model{ID: userID}}
+	user := &models.User{ID: userID}
 	return r.db.Model(chatroom).Association("Participants").Append(user)
 }
 
-func (r *ChatRoomRepository) RemoveParticipant(chatroomID uint, userID uint) error {
+func (r *ChatRoomRepository) RemoveParticipant(chatroomID uint, userID string) error {
 	chatroom, err := r.GetByID(chatroomID)
 	if err != nil {
 		return err
 	}
-	user := &models.User{Model: gorm.Model{ID: userID}}
+	user := &models.User{ID: userID}
 	return r.db.Model(chatroom).Association("Participants").Delete(user)
 }

@@ -14,7 +14,11 @@ func NewUserService(userRepo repositories.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
-func (s *UserService) GetByID(id uint) (*models.User, error) {
+func (s *UserService) Create(user *models.User) error {
+	return s.userRepo.Create(user)
+}
+
+func (s *UserService) GetByID(id string) (*models.User, error) {
 	return s.userRepo.FindByID(id)
 }
 
@@ -22,13 +26,11 @@ func (s *UserService) GetByUsername(username string) (*models.User, error) {
 	return s.userRepo.FindByUsername(username)
 }
 
-func (s *UserService) Update(id uint, data utils.UpdateUserRequest) (*models.User, error) {
+func (s *UserService) Update(id string, data utils.UpdateUserRequest) (*models.User, error) {
 	user, err := s.userRepo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
-
-	user.Password = ""
 
 	if data.Username != "" {
 		user.Username = data.Username
@@ -46,6 +48,6 @@ func (s *UserService) Update(id uint, data utils.UpdateUserRequest) (*models.Use
 	return user, err
 }
 
-func (s *UserService) Delete(id uint) error {
+func (s *UserService) Delete(id string) error {
 	return s.userRepo.Delete(id)
 }

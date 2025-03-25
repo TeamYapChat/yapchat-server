@@ -5,70 +5,30 @@ definitions:
         type: integer
       name:
         type: string
-      participant_ids:
+      participants:
         items:
-          type: integer
+          $ref: '#/definitions/handlers.UserResponse'
         type: array
       type:
         type: string
-    type: object
-  handlers.LoginRequest:
-    properties:
-      login:
-        example: john@example.com
-        type: string
-      password:
-        example: password123
-        type: string
-    required:
-    - login
-    - password
     type: object
   handlers.MessageResponse:
     properties:
       content:
         type: string
       sender_id:
-        type: integer
+        type: string
       timestamp:
         type: string
-    type: object
-  handlers.RegisterRequest:
-    properties:
-      email:
-        example: john@example.com
-        type: string
-      password:
-        example: password123
-        minLength: 8
-        type: string
-      username:
-        example: john_doe
-        type: string
-    required:
-    - email
-    - password
-    - username
-    type: object
-  handlers.SendEmailRequest:
-    properties:
-      id:
-        example: 123
-        type: integer
-    required:
-    - id
     type: object
   handlers.UserResponse:
     properties:
       created_at:
         example: "1970-01-01T00:00:00Z"
         type: string
-      email:
-        example: john@example.com
-        type: string
       id:
-        example: 123
-        type: integer
+        example: "123"
+        type: string
       image_url:
         example: https://example.com/profile_picture.jpg
         type: string
@@ -85,7 +45,7 @@ definitions:
         type: string
       participant_ids:
         items:
-          type: integer
+          type: string
         type: array
       type:
         $ref: '#/definitions/models.ChatRoomType'
@@ -117,18 +77,6 @@ definitions:
         example: true
         type: boolean
     type: object
-  utils.UpdateUserRequest:
-    properties:
-      image_url:
-        example: https://example.com/profile_picture.jpg
-        type: string
-      status:
-        example: online
-        type: string
-      username:
-        example: john_doe
-        type: string
-    type: object
 host: api.yapchat.xyz
 info:
   contact: {}
@@ -139,192 +87,6 @@ info:
   title: YapChat API
   version: "1.0"
 paths:
-  /auth/login:
-    post:
-      consumes:
-      - application/json
-      description: Login with email or username and password. Returns access token
-        in response body and sets refresh token cookie.
-      parameters:
-      - description: User credentials
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.LoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successful login. Access and refresh tokens are in HttpOnly
-            cookies.
-          schema:
-            $ref: '#/definitions/utils.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Authenticate user
-      tags:
-      - auth
-  /auth/refresh:
-    post:
-      description: Handles refresh token logic to issue new access and refresh tokens.
-        Returns new access token in response body and sets refresh token cookie.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successful token refresh. New access and refresh tokens are
-            in HttpOnly cookies.
-          schema:
-            $ref: '#/definitions/utils.SuccessResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Refresh access and refresh tokens
-      tags:
-      - auth
-  /auth/register:
-    post:
-      consumes:
-      - application/json
-      description: Create a new user account
-      parameters:
-      - description: User registration information
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.UserResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Register new user
-      tags:
-      - auth
-  /auth/send-verification-email:
-    post:
-      consumes:
-      - application/json
-      description: Send verification email to the user's email address
-      parameters:
-      - description: User ID
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.SendEmailRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Send verification email
-      tags:
-      - auth
-  /auth/validate:
-    get:
-      description: Validates the access token from the cookie.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.SuccessResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Validate access token
-      tags:
-      - auth
-  /auth/verify-email:
-    get:
-      consumes:
-      - application/json
-      description: Verify user's email address using verification code
-      parameters:
-      - description: Verification code
-        in: query
-        name: code
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Verify email address
-      tags:
-      - auth
   /v1/chatrooms:
     get:
       description: Get a list of all chat rooms that the user is in
@@ -527,30 +289,6 @@ paths:
       tags:
       - chatrooms
   /v1/user:
-    delete:
-      description: Delete the currently authenticated user's profile
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete user profile
-      tags:
-      - users
     get:
       description: Get details of the currently authenticated user
       produces:
@@ -580,50 +318,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user profile
-      tags:
-      - users
-    put:
-      consumes:
-      - application/json
-      description: Update details of the currently authenticated user
-      parameters:
-      - description: User details to update
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/utils.UpdateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.UserResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update user profile
       tags:
       - users
   /v1/user/{username}:

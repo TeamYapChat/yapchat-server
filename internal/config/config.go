@@ -9,16 +9,15 @@ import (
 )
 
 type Config struct {
-	AppEnv           string // "prod", "dev", "test"
-	DBHost           string
-	DBUser           string
-	DBPassword       string
-	DBName           string
-	RedisURL         string
-	NATSURL          string
-	JWTSecret        string
-	MailerSendAPIKey string
-	EmailTemplateID  string
+	AppEnv        string // "prod", "dev", "test"
+	DBHost        string
+	DBUser        string
+	DBPassword    string
+	DBName        string
+	RedisURL      string
+	NATSURL       string
+	ClerkSecret   string
+	SigningSecret string
 }
 
 func LoadConfig() Config {
@@ -42,10 +41,9 @@ func LoadConfig() Config {
 	config.DBName = os.Getenv("DB_NAME")
 	config.RedisURL = os.Getenv("REDIS_URL")
 	config.NATSURL = os.Getenv("NATS_URL")
-	config.JWTSecret = os.Getenv("JWT_SECRET")
-	config.EmailTemplateID = os.Getenv("EMAIL_TEMPLATE_ID")
 	config.DBPassword = os.Getenv("DB_PASS")
-	config.MailerSendAPIKey = os.Getenv("MAILERSEND_API_KEY")
+	config.ClerkSecret = os.Getenv("CLERK_SECRET_KEY")
+	config.SigningSecret = os.Getenv("SIGNING_SECRET")
 
 	return config
 }
