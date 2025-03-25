@@ -69,9 +69,15 @@ func (h *WebhookHandler) WebhookHandler(c *gin.Context) {
 		}
 	} else if data.Type == "user.updated" {
 		if err := h.handleUserUpdated(data.Data); err != nil {
-			log.Error("Failed to update user", "userID", data.Data.ID, "err", err.Error())
-			c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to update user"))
-			return
+			if err.Error() == "record not found" {
+				log.Info("User not found, attempting to create user", "userID", data.Data.ID)
+				err = h.handleUserCreated(data.Data)
+			}
+			if err != nil {
+				log.Error("Failed to update user", "userID", data.Data.ID, "err", err.Error())
+				c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to update user"))
+				return
+			}
 		}
 	} else if data.Type == "user.deleted" {
 		if err := h.handleUserDeleted(data.Data); err != nil {
