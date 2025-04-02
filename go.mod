@@ -1,6 +1,7 @@
 module github.com/teamyapchat/yapchat-server
 
 go 1.23.2
+toolchain go1.24.1
 
 require (
 	github.com/charmbracelet/log v0.4.0
@@ -11,7 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nats-io/nats.go v1.39.1
-	github.com/redis/go-redis/v9 v9.7.1
+	github.com/redis/go-redis/v9 v9.7.3
 	github.com/svix/svix-webhooks v1.62.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
