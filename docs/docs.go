@@ -462,7 +462,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/ws": {
+        "/ws": {
             "get": {
                 "description": "Handles websocket connections for real-time communication.",
                 "tags": [

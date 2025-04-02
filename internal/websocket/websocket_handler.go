@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/mitchellh/mapstructure"
 	"github.com/nats-io/nats.go"
 
 	"github.com/teamyapchat/yapchat-server/internal/models"
@@ -18,6 +19,7 @@ import (
 )
 
 type WSHandler struct {
+	authService     *services.AuthService
 	chatroomService *services.ChatRoomService
 	messageService  *services.MessageService
 	userService     *services.UserService
@@ -27,6 +29,7 @@ type WSHandler struct {
 
 func NewWSHandler(
 	natsURL string,
+	authService *services.AuthService,
 	chatroomService *services.ChatRoomService,
 	messageService *services.MessageService,
 	userService *services.UserService,
@@ -39,6 +42,7 @@ func NewWSHandler(
 	log.Info("Connected to NATS")
 
 	return &WSHandler{
+		authService:     authService,
 		chatroomService: chatroomService,
 		messageService:  messageService,
 		userService:     userService,
@@ -58,111 +62,160 @@ var upgrader = websocket.Upgrader{
 var mutex sync.Mutex
 
 type Message struct {
-	Content   string `json:"content"             binding:"required"`
-	SenderID  string `json:"sender_id,omitempty"`
-	RoomID    uint   `json:"room_id"             binding:"required"`
-	Timestamp string `json:"timestamp,omitempty"`
-	Type      string `json:"type,omitempty"`
+	Content   string `json:"content"`
+	SenderID  string `json:"sender_id"`
+	RoomID    uint   `json:"room_id"`
+	Timestamp string `json:"timestamp"`
 }
 
 // WebSocketHandler godoc
 // @Summary      Handle websocket connection
 // @Description  Handles websocket connections for real-time communication.
 // @Tags         websocket
-// @Router       /v1/ws [get]
+// @Router       /ws [get]
 func (h *WSHandler) WebSocketHandler(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(
-			http.StatusInternalServerError,
-			utils.NewErrorResponse("user ID not found in context"),
-		)
-		return
-	}
-
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Error("Failed to upgrade connection", "err", err.Error())
 		return
 	}
+
+	var payload models.Payload
+	if err := conn.ReadJSON(&payload); err != nil {
+		if websocket.IsUnexpectedCloseError(err,
+			websocket.CloseGoingAway,
+			websocket.CloseNormalClosure) {
+			log.Warn("Unexpected WebSocket closure",
+				"err", err.Error())
+		}
+		conn.WriteJSON(gin.H{"error": "invalid payload structure"})
+		conn.Close()
+
+		log.Error("Failed to read message payload", "err", err.Error())
+		return
+	}
+
+	if payload.Opcode != 1 {
+		conn.WriteJSON(gin.H{"error": "invalid opcode"})
+		conn.Close()
+
+		log.Warn("Client did not send identify message")
+		return
+	}
+
+	var identifyData models.IdentifyData
+	if err := mapstructure.Decode(payload.Data, &identifyData); err != nil {
+		conn.WriteJSON(gin.H{"error": "invalid data structure"})
+		conn.Close()
+
+		log.Error("Failed to unmarshal identify data", "err", err.Error())
+		return
+	}
+
+	usr, err := h.authService.VerifyToken(c, identifyData.Token)
+	if err != nil {
+		conn.WriteJSON(gin.H{"error": err.Error()})
+		conn.Close()
+
+		return
+	}
+
+	userID := usr.ID
+
 	defer func() {
 		conn.Close()
 		mutex.Lock()
-		delete(h.clients, userID.(string))
+		delete(h.clients, userID)
 		mutex.Unlock()
 
 		// Set status to offline
 		_, err := h.userService.Update(
-			userID.(string),
+			userID,
 			utils.UpdateUserRequest{Status: "offline"},
 		)
 		if err != nil {
 			log.Error(
 				"Failed to set user status to offline",
 				"userID",
-				userID.(string),
+				userID,
 				"err",
 				err.Error(),
 			)
 		}
 
-		log.Info("Client disconnected", "id", userID.(string))
+		log.Info("Client disconnected", "id", userID)
 	}()
 
 	mutex.Lock()
-	h.clients[userID.(string)] = conn
+	h.clients[userID] = conn
 	mutex.Unlock()
 
-	_, err = h.userService.Update(userID.(string), utils.UpdateUserRequest{Status: "online"})
+	_, err = h.userService.Update(userID, utils.UpdateUserRequest{Status: "online"})
 	if err != nil {
 		log.Error(
 			"Failed to set user status to online",
 			"userID",
-			userID.(string),
+			userID,
 			"err",
 			err.Error(),
 		)
 	}
 
-	log.Info("Client connected", "id", userID.(string))
+	conn.WriteJSON(gin.H{"message": "successfully connected to server"})
+	log.Info("Client connected", "id", userID)
 
 	// Handle panics in connection handler
 	defer func() {
 		if r := recover(); r != nil {
 			log.Error("WebSocket panic recovered",
-				"userID", userID.(string),
+				"userID", userID,
 				"panic", r,
 				"stack", string(debug.Stack()))
 		}
 	}()
 
 	for {
-		var msg Message
-		err := conn.ReadJSON(&msg)
+		var payload models.Payload
+		err := conn.ReadJSON(&payload)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err,
 				websocket.CloseGoingAway,
 				websocket.CloseNormalClosure) {
 				log.Warn("Unexpected WebSocket closure",
-					"userID", userID.(string),
+					"userID", userID,
 					"err", err.Error())
 			}
 			break
 		}
 
-		log.Debug("Received message", "msg", msg)
+		if payload.Opcode != 0 {
+			log.Warn("Invalid message type received", "opcode", payload.Opcode, "userID", userID)
+			continue
+		}
 
-		msg.SenderID = userID.(string)
-		msg.Timestamp = time.Now().Format(time.RFC3339)
-		msg.Type = "message"
+		log.Debug("Received message", "msg", payload)
+
+		var msgData models.DispatchData
+		if err := mapstructure.Decode(payload.Data, &msgData); err != nil {
+			conn.WriteJSON(gin.H{"error": "invalid data body structure"})
+
+			log.Error("Failed to unmarshal dispatch data", "err", err.Error())
+			continue
+		}
+
+		msg := Message{
+			Content:   msgData.Content,
+			SenderID:  userID,
+			RoomID:    msgData.RoomID,
+			Timestamp: payload.Timestamp.Format(time.RFC3339),
+		}
 
 		// Persist message to DB
 		err = h.messageService.CreateMessage(&models.Message{
 			SenderID:  msg.SenderID,
 			RoomID:    msg.RoomID,
 			Content:   msg.Content,
-			Timestamp: time.Now(),
-			Type:      msg.Type,
+			Timestamp: payload.Timestamp,
 		})
 		if err != nil {
 			log.Error("Failed to persist message", "err", err.Error())

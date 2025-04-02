@@ -20,7 +20,7 @@ func (r *MessageRepository) Create(message *models.Message) error {
 
 func (r *MessageRepository) GetByRoomID(roomID uint, limit int) ([]models.Message, error) {
 	var messages []models.Message
-	err := r.db.Where("room_id = ? AND type = ?", roomID, "message").
+	err := r.db.Where("room_id = ?", roomID).
 		Order("created_at desc").
 		Limit(limit).
 		Find(&messages).Error

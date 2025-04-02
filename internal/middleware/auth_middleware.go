@@ -10,11 +10,10 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/clerk/clerk-sdk-go/v2/jwks"
-	"github.com/clerk/clerk-sdk-go/v2/jwt"
-	"github.com/clerk/clerk-sdk-go/v2/user"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/teamyapchat/yapchat-server/internal/services"
 	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
 
@@ -62,7 +61,7 @@ func (s *JWKStore) SetJWK(keyID string, jwk *clerk.JSONWebKey) {
 	}
 }
 
-func AuthMiddleware(store *JWKStore) gin.HandlerFunc {
+func AuthMiddleware(authService *services.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -82,64 +81,27 @@ func AuthMiddleware(store *JWKStore) gin.HandlerFunc {
 			return
 		}
 
-		unsafeClaims, err := jwt.Decode(c.Request.Context(), &jwt.DecodeParams{Token: sessionToken})
+		usr, err := authService.VerifyToken(c.Request.Context(), sessionToken)
 		if err != nil {
-			c.AbortWithStatusJSON(
-				http.StatusUnauthorized,
-				utils.NewErrorResponse("Invalid token"),
-			)
-			return
-		}
-
-		keyID := unsafeClaims.KeyID
-		if keyID == "" {
-			c.AbortWithStatusJSON(
-				http.StatusUnauthorized,
-				utils.NewErrorResponse("Missing key ID in token"),
-			)
-			return
-		}
-
-		jwk := store.GetJWK(keyID)
-		if jwk == nil {
-			jwk, err = jwt.GetJSONWebKey(c.Request.Context(), &jwt.GetJSONWebKeyParams{
-				KeyID:      keyID,
-				JWKSClient: store.jwksClient,
-			})
-			if err != nil {
+			if err.Error() == "invalid token" {
 				c.AbortWithStatusJSON(
 					http.StatusUnauthorized,
-					utils.NewErrorResponse("Failed to fetch JWK"),
+					utils.NewErrorResponse("Invalid token"),
+				)
+				return
+			} else if err.Error() == "invalid or expired token" {
+				c.AbortWithStatusJSON(
+					http.StatusUnauthorized,
+					utils.NewErrorResponse("Invalid or expired token"),
+				)
+				return
+			} else {
+				c.AbortWithStatusJSON(
+					http.StatusInternalServerError,
+					utils.NewErrorResponse(err.Error()),
 				)
 				return
 			}
-
-			store.SetJWK(keyID, jwk)
-		}
-
-		claims, err := jwt.Verify(c.Request.Context(), &jwt.VerifyParams{
-			Token: sessionToken,
-			JWK:   jwk,
-		})
-		if err != nil {
-			log.Error("Failed to verify token", "err", err.Error())
-
-			c.AbortWithStatusJSON(
-				http.StatusUnauthorized,
-				utils.NewErrorResponse("Invalid or expired token"),
-			)
-			return
-		}
-
-		usr, err := user.Get(c.Request.Context(), claims.Subject)
-		if err != nil {
-			log.Error("Failed to find user in Clerk", "id", claims.Subject, "err", err.Error())
-
-			c.AbortWithStatusJSON(
-				http.StatusUnauthorized,
-				utils.NewErrorResponse("User not found"),
-			)
-			return
 		}
 
 		c.Set("userID", usr.ID)

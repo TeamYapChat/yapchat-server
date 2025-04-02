@@ -96,15 +96,16 @@ func main() {
 		Window: time.Second,
 	})
 
-	clerk.SetKey(cfg.ClerkSecret)
-	store := middleware.NewJWKStore(cfg.ClerkSecret, redisClient)
-
 	// Repos
 	userRepo := repositories.NewUserRepository(db)
 	chatroomRepo := repositories.NewChatRoomRepository(db)
 	messageRepo := repositories.NewMessageRepository(db)
 
 	// Services
+	clerk.SetKey(cfg.ClerkSecret)
+	store := services.NewJWKStore(cfg.ClerkSecret, redisClient)
+	authService := services.NewAuthService(store)
+
 	userService := services.NewUserService(userRepo)
 	chatroomService := services.NewChatRoomService(chatroomRepo, userRepo)
 	messageService := services.NewMessageService(messageRepo)
@@ -113,7 +114,13 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService)
 	chatroomHandler := handlers.NewChatRoomHandler(chatroomService, messageService)
 	webhookHandler := handlers.NewWebhookHandler(cfg.SigningSecret, userService)
-	wsHandler := websocket.NewWSHandler(cfg.NATSURL, chatroomService, messageService, userService)
+	wsHandler := websocket.NewWSHandler(
+		cfg.NATSURL,
+		authService,
+		chatroomService,
+		messageService,
+		userService,
+	)
 	go wsHandler.StartBroadcaster()
 
 	router, err := graceful.Default()
@@ -127,10 +134,12 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	router.GET("/ws", wsHandler.WebSocketHandler)
+
 	router.POST("/webhook", webhookHandler.WebhookHandler)
 
 	protected := router.Group("/v1")
-	protected.Use(middleware.AuthMiddleware(store), limiter.Middleware("protected"))
+	protected.Use(middleware.AuthMiddleware(authService), limiter.Middleware("protected"))
 	{
 		// User routes
 		protected.GET("/user", userHandler.GetHandler)
@@ -144,9 +153,6 @@ func main() {
 		protected.POST("/chatrooms", chatroomHandler.CreateHandler)
 		protected.POST("/chatrooms/:id/join", chatroomHandler.JoinChatroomHandler)
 		protected.POST("/chatrooms/:id/leave", chatroomHandler.LeaveChatroomHandler)
-
-		// Websocket routes
-		protected.GET("/ws", wsHandler.WebSocketHandler)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
