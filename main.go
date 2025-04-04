@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/clerk/clerk-sdk-go/v2"
-	"github.com/gin-contrib/graceful"
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -123,11 +124,10 @@ func main() {
 	)
 	go wsHandler.StartBroadcaster()
 
-	router, err := graceful.Default()
-	if err != nil {
-		log.Fatal("Failed to create router", "err", err.Error())
-	}
-	defer router.Close()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	router := gin.Default()
 
 	router.SetTrustedProxies(nil)
 	router.Use(middleware.CORS())
@@ -155,11 +155,28 @@ func main() {
 		protected.POST("/chatrooms/:id/leave", chatroomHandler.LeaveChatroomHandler)
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
-	// Run on :8080 by default
-	if err := router.RunWithContext(ctx); err != nil && err == context.Canceled {
-		log.Fatal("Shutting down server", "err", err.Error())
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
 	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Error while running server", "err", err.Error())
+		}
+	}()
+
+	<-ctx.Done()
+
+	stop()
+	log.Debug("Shutting down gracefully, press Ctrl+C again to force")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown", "err", err.Error())
+	}
+
+	log.Info("Server exiting")
 }
