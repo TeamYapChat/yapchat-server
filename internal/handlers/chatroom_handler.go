@@ -52,6 +52,7 @@ type MessageResponse struct {
 // @Param        request body models.ChatRoomRequest true "Chat room info"
 // @Success      201 {object} utils.SuccessResponse
 // @Failure      400 {object} utils.ErrorResponse
+// @Failure      401 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms [post]
 func (h *ChatRoomHandler) CreateHandler(c *gin.Context) {
@@ -85,6 +86,7 @@ func (h *ChatRoomHandler) CreateHandler(c *gin.Context) {
 // @Param        id path integer true "Chat room ID"
 // @Success      200 {object} utils.SuccessResponse{data=ChatRoomResponse}
 // @Failure      400 {object} utils.ErrorResponse
+// @Failure      401 {object} utils.ErrorResponse
 // @Failure      404 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms/{id} [get]
@@ -201,6 +203,7 @@ func (h *ChatRoomHandler) GetMessagesByRoomIDHandler(c *gin.Context) {
 // @Tags         chatrooms
 // @Produce      json
 // @Success      200 {object} utils.SuccessResponse{data=[]ChatRoomResponse}
+// @Failure      401 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms [get]
 func (h *ChatRoomHandler) ListChatroomsHandler(c *gin.Context) {
@@ -239,6 +242,7 @@ func (h *ChatRoomHandler) ListChatroomsHandler(c *gin.Context) {
 // @Param        id path integer true "Chat room ID"
 // @Success      200 {object} utils.SuccessResponse
 // @Failure      400 {object} utils.ErrorResponse
+// @Failure      401 {object} utils.ErrorResponse
 // @Failure      404 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms/{id}/join [post]
@@ -267,7 +271,12 @@ func (h *ChatRoomHandler) JoinChatroomHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, utils.NewSuccessResponse("Successfully joined chat room"))
+	c.JSON(http.StatusOK,
+		utils.SuccessResponse{
+			Success: true,
+			Message: "Successfully joined chat room",
+		},
+	)
 }
 
 // LeaveChatroomHandler godoc
@@ -278,6 +287,7 @@ func (h *ChatRoomHandler) JoinChatroomHandler(c *gin.Context) {
 // @Param        id path integer true "Chat room ID"
 // @Success      200 {object} utils.SuccessResponse
 // @Failure      400 {object} utils.ErrorResponse
+// @Failure      401 {object} utils.ErrorResponse
 // @Failure      404 {object} utils.ErrorResponse
 // @Failure      500 {object} utils.ErrorResponse
 // @Router       /v1/chatrooms/{id}/leave [post]
