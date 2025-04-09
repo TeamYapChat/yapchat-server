@@ -104,6 +104,10 @@ paths:
                     $ref: '#/definitions/handlers.ChatRoomResponse'
                   type: array
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -131,6 +135,10 @@ paths:
             $ref: '#/definitions/utils.SuccessResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "500":
@@ -165,6 +173,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -174,6 +186,50 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Get chat room by ID
+      tags:
+      - chatrooms
+  /v1/chatrooms/{id}/invite-code:
+    get:
+      description: Create and return an invite code for a chat room
+      parameters:
+      - description: Chat room ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get an invite code for a chat room
       tags:
       - chatrooms
   /v1/chatrooms/{id}/join:
@@ -194,6 +250,10 @@ paths:
             $ref: '#/definitions/utils.SuccessResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "404":
@@ -225,6 +285,10 @@ paths:
             $ref: '#/definitions/utils.SuccessResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "404":

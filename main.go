@@ -108,7 +108,7 @@ func main() {
 	authService := services.NewAuthService(store)
 
 	userService := services.NewUserService(userRepo)
-	chatroomService := services.NewChatRoomService(chatroomRepo, userRepo)
+	chatroomService := services.NewChatRoomService(chatroomRepo, userRepo, redisClient)
 	messageService := services.NewMessageService(messageRepo)
 
 	// Handlers
@@ -148,6 +148,7 @@ func main() {
 		// Chatroom routes
 		protected.GET("/chatrooms", chatroomHandler.ListChatroomsHandler)
 		protected.GET("/chatrooms/:id", chatroomHandler.GetByIDHandler)
+		protected.GET("/chatrooms/:id/invite-code", chatroomHandler.GetInviteCodeHandler)
 		protected.GET("/chatrooms/:id/messages", chatroomHandler.GetMessagesByRoomIDHandler)
 
 		protected.POST("/chatrooms", chatroomHandler.CreateHandler)

@@ -234,6 +234,61 @@ func (h *ChatRoomHandler) ListChatroomsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewSuccessResponse(responses))
 }
 
+// GetInviteCodeHandler godoc
+// @Summary      Get an invite code for a chat room
+// @Description  Create and return an invite code for a chat room
+// @Tags         chatrooms
+// @Produce      json
+// @Param        id path integer true "Chat room ID"
+// @Success      200 {object} utils.SuccessResponse{data=string}
+// @Failure      400 {object} utils.ErrorResponse
+// @Failure      401 {object} utils.ErrorResponse
+// @Failure      403 {object} utils.ErrorResponse
+// @Failure      404 {object} utils.ErrorResponse
+// @Failure      500 {object} utils.ErrorResponse
+// @Router       /v1/chatrooms/{id}/invite-code [get]
+func (h *ChatRoomHandler) GetInviteCodeHandler(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, utils.NewErrorResponse("User ID not found in context"))
+		return
+	}
+
+	idStr := c.Param("id")
+	idUint64, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid chat room ID"))
+		return
+	}
+	chatroomID := uint(idUint64)
+
+	chatroom, err := h.chatroomService.GetByID(chatroomID)
+	if err != nil {
+		if errors.Is(err, services.ErrChatRoomNotFound) {
+			c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
+		} else {
+			c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to get chat room"))
+		}
+		return
+	}
+
+	if !slices.Contains(getParticipantIDs(chatroom.Participants), userID.(string)) {
+		c.JSON(http.StatusForbidden, utils.NewErrorResponse("User not in chat room"))
+		return
+	}
+
+	inviteCode, err := h.chatroomService.CreateInviteCode(chatroomID)
+	if err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			utils.NewErrorResponse("Failed to create invite code"),
+		)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.NewSuccessResponse(inviteCode))
+}
+
 // JoinChatroomHandler godoc
 // @Summary      Join chat room by ID
 // @Description  Join chat room by ID
@@ -260,6 +315,23 @@ func (h *ChatRoomHandler) JoinChatroomHandler(c *gin.Context) {
 		return
 	}
 	chatroomID := uint(idUint64)
+
+	inviteCode := c.Query("code")
+	if inviteCode == "" {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invite code is required"))
+		return
+	}
+
+	chatroom, err := h.chatroomService.GetByInviteCode(inviteCode)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid invite code"))
+		return
+	}
+
+	if chatroom.ID != chatroomID {
+		c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid invite code"))
+		return
+	}
 
 	err = h.chatroomService.AddParticipant(chatroomID, userID.(string))
 	if err != nil {
