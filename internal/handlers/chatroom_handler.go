@@ -109,15 +109,19 @@ func (h *ChatRoomHandler) GetByIDHandler(c *gin.Context) {
 
 	inviteCode := c.Query("code")
 	if inviteCode != "" {
-		_, err = h.chatroomService.GetByInviteCode(inviteCode)
-		if err != nil {
-			if errors.Is(err, services.ErrChatRoomNotFound) {
-				c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
-			} else {
-				c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to get chat room"))
-			}
-			return
-		}
+	    inviteRoom, err := h.chatroomService.GetByInviteCode(inviteCode)
+	    if err != nil {
+	        if errors.Is(err, services.ErrChatRoomNotFound) {
+	            c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
+	        } else {
+	            c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to get chat room"))
+	        }
+	        return
+	    }
+	    if inviteRoom.ID != id {
+	        c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid invite code for this chat room"))
+	        return
+	    }
 	}
 
 	if !slices.Contains(getParticipantIDs(chatroom.Participants), userID.(string)) &&
