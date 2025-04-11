@@ -142,8 +142,8 @@ func main() {
 	protected.Use(middleware.AuthMiddleware(authService), limiter.Middleware("protected"))
 	{
 		// User routes
-		protected.GET("/user", userHandler.GetHandler)
-		protected.GET("/user/:username", userHandler.GetByUsernameHandler)
+		protected.GET("/users/me", userHandler.GetMeHandler)
+		protected.GET("/users/:username", userHandler.GetByUsernameHandler)
 
 		// Chatroom routes
 		protected.GET("/chatrooms", chatroomHandler.ListChatroomsHandler)

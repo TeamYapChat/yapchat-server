@@ -20,7 +20,7 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-// GetHandler godoc
+// GetMeHandler godoc
 // @Summary      Get user profile
 // @Description  Get details of the currently authenticated user
 // @Tags         users
@@ -30,8 +30,8 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 // @Failure      401  {object}  utils.ErrorResponse
 // @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
-// @Router       /v1/user [get]
-func (h *UserHandler) GetHandler(c *gin.Context) {
+// @Router       /v1/users/me [get]
+func (h *UserHandler) GetMeHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(
@@ -70,7 +70,7 @@ func (h *UserHandler) GetHandler(c *gin.Context) {
 // @Failure      401  {object}  utils.ErrorResponse
 // @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
-// @Router       /v1/user/{username} [get]
+// @Router       /v1/users/{username} [get]
 func (h *UserHandler) GetByUsernameHandler(c *gin.Context) {
 	username := c.Param("username")
 	if username == "" {

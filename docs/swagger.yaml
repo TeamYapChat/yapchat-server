@@ -368,39 +368,7 @@ paths:
       summary: Get messages by chat room ID
       tags:
       - chatrooms
-  /v1/user:
-    get:
-      description: Get details of the currently authenticated user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dtos.UserResponse'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get user profile
-      tags:
-      - users
-  /v1/user/{username}:
+  /v1/users/{username}:
     get:
       description: Get details of a user using their username
       parameters:
@@ -440,6 +408,38 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user profile by username
+      tags:
+      - users
+  /v1/users/me:
+    get:
+      description: Get details of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dtos.UserResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user profile
       tags:
       - users
   /ws:

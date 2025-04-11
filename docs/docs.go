@@ -447,7 +447,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/user": {
+        "/v1/users/me": {
             "get": {
                 "security": [
                     {
@@ -502,7 +502,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/user/{username}": {
+        "/v1/users/{username}": {
             "get": {
                 "security": [
                     {
