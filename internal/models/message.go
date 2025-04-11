@@ -15,20 +15,3 @@ type Message struct {
 	Content   string
 	Timestamp time.Time
 }
-
-type Payload struct {
-	Opcode    int            `json:"op"`
-	Data      map[string]any `json:"data"`
-	Timestamp time.Time      `json:"timestamp"`
-}
-
-// Opcode 0
-type DispatchData struct {
-	Content string `mapstructure:"content"`
-	RoomID  uint   `mapstructure:"room_id"`
-}
-
-// Opcode 1
-type IdentifyData struct {
-	Token string `mapstructure:"token"`
-}

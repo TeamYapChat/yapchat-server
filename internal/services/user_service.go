@@ -1,9 +1,9 @@
 package services
 
 import (
+	"github.com/teamyapchat/yapchat-server/internal/dtos"
 	"github.com/teamyapchat/yapchat-server/internal/models"
 	"github.com/teamyapchat/yapchat-server/internal/repositories"
-	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
 
 type UserService struct {
@@ -26,7 +26,7 @@ func (s *UserService) GetByUsername(username string) (*models.User, error) {
 	return s.userRepo.FindByUsername(username)
 }
 
-func (s *UserService) Update(id string, data utils.UpdateUserRequest) (*models.User, error) {
+func (s *UserService) Update(id string, data dtos.UpdateUserRequest) (*models.User, error) {
 	user, err := s.userRepo.FindByID(id)
 	if err != nil {
 		return nil, err

@@ -12,6 +12,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
+	"github.com/teamyapchat/yapchat-server/internal/dtos"
 	"github.com/teamyapchat/yapchat-server/internal/models"
 	"github.com/teamyapchat/yapchat-server/internal/repositories"
 )
@@ -36,7 +37,7 @@ func NewChatRoomService(
 	}
 }
 
-func (s *ChatRoomService) Create(chatroomReq *models.ChatRoomRequest) error {
+func (s *ChatRoomService) Create(chatroomReq *dtos.ChatRoomRequest) error {
 	var participants []*models.User
 	for _, id := range chatroomReq.ParticipantIDs {
 		user, err := s.userRepo.FindByID(id)

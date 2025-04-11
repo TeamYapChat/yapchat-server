@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type ChatRoomType string
 
@@ -14,10 +16,5 @@ type ChatRoom struct {
 	Name         string       `gorm:"varchar(255);index"`
 	Type         ChatRoomType `gorm:"type:enum('dm', 'group');default:'dm'"`
 	Participants []*User      `gorm:"many2many:chat_room_participants;"`
-}
-
-type ChatRoomRequest struct {
-	Name           string       `json:"name,omitempty"`
-	Type           ChatRoomType `json:"type"`
-	ParticipantIDs []string     `json:"participant_ids,omitempty"`
+	ImageURL     string       `gorm:"varchar(255)"`
 }

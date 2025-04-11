@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	svix "github.com/svix/svix-webhooks/go"
 
+	"github.com/teamyapchat/yapchat-server/internal/dtos"
 	"github.com/teamyapchat/yapchat-server/internal/models"
 	"github.com/teamyapchat/yapchat-server/internal/services"
 	"github.com/teamyapchat/yapchat-server/internal/utils"
@@ -106,7 +107,7 @@ func (h *WebhookHandler) handleUserCreated(data UserData) error {
 }
 
 func (h *WebhookHandler) handleUserUpdated(data UserData) error {
-	_, err := h.userService.Update(data.ID, utils.UpdateUserRequest{
+	_, err := h.userService.Update(data.ID, dtos.UpdateUserRequest{
 		Username: data.Username,
 		ImageURL: data.ImageURL,
 	})

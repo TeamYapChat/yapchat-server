@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/gin-gonic/gin"
 
+	"github.com/teamyapchat/yapchat-server/internal/dtos"
 	"github.com/teamyapchat/yapchat-server/internal/services"
 	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
@@ -19,22 +20,13 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-// Response Structs
-type UserResponse struct {
-	ID        string `json:"id"                   example:"123"`
-	Username  string `json:"username"             example:"john_doe"`
-	ImageURL  string `json:"image_url,omitempty"  example:"https://example.com/profile_picture.jpg"`
-	IsOnline  bool   `json:"is_online"            example:"true"`
-	CreatedAt string `json:"created_at,omitempty" example:"1970-01-01T00:00:00Z"`
-}
-
 // GetHandler godoc
 // @Summary      Get user profile
 // @Description  Get details of the currently authenticated user
 // @Tags         users
 // @Security     ApiKeyAuth
 // @Produce      json
-// @Success      200  {object}  utils.SuccessResponse{data=UserResponse}
+// @Success      200  {object}  utils.SuccessResponse{data=dtos.UserResponse}
 // @Failure      401  {object}  utils.ErrorResponse
 // @Failure      404  {object}  utils.ErrorResponse
 // @Failure      500  {object}  utils.ErrorResponse
@@ -55,7 +47,7 @@ func (h *UserHandler) GetHandler(c *gin.Context) {
 		return
 	}
 
-	userResponse := UserResponse{
+	userResponse := dtos.UserResponse{
 		ID:        user.ID,
 		Username:  user.Username,
 		ImageURL:  user.ImageURL,
@@ -73,7 +65,7 @@ func (h *UserHandler) GetHandler(c *gin.Context) {
 // @Security     ApiKeyAuth
 // @Produce      json
 // @Param        username path string true "Username of the user to retrieve"
-// @Success      200  {object}  utils.SuccessResponse{data=UserResponse}
+// @Success      200  {object}  utils.SuccessResponse{data=dtos.UserResponse}
 // @Failure      400  {object}  utils.ErrorResponse
 // @Failure      401  {object}  utils.ErrorResponse
 // @Failure      404  {object}  utils.ErrorResponse
@@ -93,7 +85,7 @@ func (h *UserHandler) GetByUsernameHandler(c *gin.Context) {
 		return
 	}
 
-	userResponse := UserResponse{
+	userResponse := dtos.UserResponse{
 		ID:       user.ID,
 		Username: user.Username,
 		ImageURL: user.ImageURL,

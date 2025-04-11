@@ -43,7 +43,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/handlers.ChatRoomResponse"
+                                                "$ref": "#/definitions/dtos.ChatRoomResponse"
                                             }
                                         }
                                     }
@@ -84,7 +84,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ChatRoomRequest"
+                            "$ref": "#/definitions/dtos.ChatRoomRequest"
                         }
                     }
                 ],
@@ -147,7 +147,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/handlers.ChatRoomResponse"
+                                            "$ref": "#/definitions/dtos.ChatRoomResponse"
                                         }
                                     }
                                 }
@@ -296,6 +296,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
                     },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -325,11 +331,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.SuccessResponse"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -345,6 +348,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -397,7 +406,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/handlers.MessageResponse"
+                                                "$ref": "#/definitions/dtos.MessageResponse"
                                             }
                                         }
                                     }
@@ -465,7 +474,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/handlers.UserResponse"
+                                            "$ref": "#/definitions/dtos.UserResponse"
                                         }
                                     }
                                 }
@@ -529,7 +538,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/handlers.UserResponse"
+                                            "$ref": "#/definitions/dtos.UserResponse"
                                         }
                                     }
                                 }
@@ -575,11 +584,41 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handlers.ChatRoomResponse": {
+        "dtos.ChatRoomRequest": {
+            "type": "object",
+            "properties": {
+                "image_url": {
+                    "type": "string",
+                    "example": "https://example.com/profile_picture.jpg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Group Chat"
+                },
+                "participant_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ChatRoomType"
+                        }
+                    ],
+                    "example": "group"
+                }
+            }
+        },
+        "dtos.ChatRoomResponse": {
             "type": "object",
             "properties": {
                 "id": {
                     "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -587,7 +626,7 @@ const docTemplate = `{
                 "participants": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handlers.UserResponse"
+                        "$ref": "#/definitions/dtos.UserResponse"
                     }
                 },
                 "type": {
@@ -595,11 +634,14 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.MessageResponse": {
+        "dtos.MessageResponse": {
             "type": "object",
             "properties": {
                 "content": {
                     "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
                 },
                 "sender_id": {
                     "type": "string"
@@ -609,7 +651,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UserResponse": {
+        "dtos.UserResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -631,23 +673,6 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "john_doe"
-                }
-            }
-        },
-        "models.ChatRoomRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "participant_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "$ref": "#/definitions/models.ChatRoomType"
                 }
             }
         },

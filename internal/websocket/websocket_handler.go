@@ -13,9 +13,9 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/nats-io/nats.go"
 
+	"github.com/teamyapchat/yapchat-server/internal/dtos"
 	"github.com/teamyapchat/yapchat-server/internal/models"
 	"github.com/teamyapchat/yapchat-server/internal/services"
-	"github.com/teamyapchat/yapchat-server/internal/utils"
 )
 
 type WSHandler struct {
@@ -61,13 +61,6 @@ var upgrader = websocket.Upgrader{
 
 var mutex sync.Mutex
 
-type Message struct {
-	Content   string `json:"content"`
-	SenderID  string `json:"sender_id"`
-	RoomID    uint   `json:"room_id"`
-	Timestamp string `json:"timestamp"`
-}
-
 // WebSocketHandler godoc
 // @Summary      Handle websocket connection
 // @Description  Handles websocket connections for real-time communication.
@@ -80,7 +73,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	var payload models.Payload
+	var payload dtos.Payload
 	if err := conn.ReadJSON(&payload); err != nil {
 		if websocket.IsUnexpectedCloseError(err,
 			websocket.CloseGoingAway,
@@ -103,7 +96,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	var identifyData models.IdentifyData
+	var identifyData dtos.IdentifyData
 	if err := mapstructure.Decode(payload.Data, &identifyData); err != nil {
 		conn.WriteJSON(gin.H{"error": "invalid data structure"})
 		conn.Close()
@@ -131,7 +124,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 		// Set status to offline
 		_, err := h.userService.Update(
 			userID,
-			utils.UpdateUserRequest{Status: "offline"},
+			dtos.UpdateUserRequest{Status: "offline"},
 		)
 		if err != nil {
 			log.Error(
@@ -150,7 +143,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 	h.clients[userID] = conn
 	mutex.Unlock()
 
-	_, err = h.userService.Update(userID, utils.UpdateUserRequest{Status: "online"})
+	_, err = h.userService.Update(userID, dtos.UpdateUserRequest{Status: "online"})
 	if err != nil {
 		log.Error(
 			"Failed to set user status to online",
@@ -175,7 +168,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 	}()
 
 	for {
-		var payload models.Payload
+		var payload dtos.Payload
 		err := conn.ReadJSON(&payload)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err,
@@ -195,7 +188,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 
 		log.Debug("Received message", "msg", payload)
 
-		var msgData models.DispatchData
+		var msgData dtos.DispatchData
 		if err := mapstructure.Decode(payload.Data, &msgData); err != nil {
 			conn.WriteJSON(gin.H{"error": "invalid data body structure"})
 
@@ -203,7 +196,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 			continue
 		}
 
-		msg := Message{
+		msg := dtos.MessageResponse{
 			Content:   msgData.Content,
 			SenderID:  userID,
 			RoomID:    msgData.RoomID,
@@ -239,7 +232,7 @@ func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 func (h *WSHandler) StartBroadcaster() {
 	// Subscribe to NATS subject
 	_, err := h.nc.Subscribe("chat_messages", func(m *nats.Msg) {
-		var msg Message
+		var msg dtos.MessageResponse
 		err := json.Unmarshal(m.Data, &msg)
 		if err != nil {
 			log.Error("Error unmarshaling NATS message", "err", err.Error())
