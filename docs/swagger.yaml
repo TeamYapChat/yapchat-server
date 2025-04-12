@@ -77,6 +77,22 @@ definitions:
         example: false
         type: boolean
     type: object
+  utils.Pagination:
+    properties:
+      data: {}
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 10
+        type: integer
+      total_pages:
+        example: 10
+        type: integer
+      total_rows:
+        example: 100
+        type: integer
+    type: object
   utils.SuccessResponse:
     properties:
       data: {}
@@ -327,9 +343,13 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Number of messages to return (default 25)
+      - description: Page number (default 1)
         in: query
-        name: count
+        name: page
+        type: integer
+      - description: Number of messages per page (default 25)
+        in: query
+        name: page_size
         type: integer
       produces:
       - application/json
@@ -338,7 +358,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/utils.SuccessResponse'
+            - $ref: '#/definitions/utils.Pagination'
             - properties:
                 data:
                   items:

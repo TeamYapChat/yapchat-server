@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 	"slices"
 	"strconv"
@@ -109,19 +110,22 @@ func (h *ChatRoomHandler) GetByIDHandler(c *gin.Context) {
 
 	inviteCode := c.Query("code")
 	if inviteCode != "" {
-	    inviteRoom, err := h.chatroomService.GetByInviteCode(inviteCode)
-	    if err != nil {
-	        if errors.Is(err, services.ErrChatRoomNotFound) {
-	            c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
-	        } else {
-	            c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to get chat room"))
-	        }
-	        return
-	    }
-	    if inviteRoom.ID != id {
-	        c.JSON(http.StatusBadRequest, utils.NewErrorResponse("Invalid invite code for this chat room"))
-	        return
-	    }
+		inviteRoom, err := h.chatroomService.GetByInviteCode(inviteCode)
+		if err != nil {
+			if errors.Is(err, services.ErrChatRoomNotFound) {
+				c.JSON(http.StatusNotFound, utils.NewErrorResponse("Chat room not found"))
+			} else {
+				c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to get chat room"))
+			}
+			return
+		}
+		if inviteRoom.ID != id {
+			c.JSON(
+				http.StatusBadRequest,
+				utils.NewErrorResponse("Invalid invite code for this chat room"),
+			)
+			return
+		}
 	}
 
 	if !slices.Contains(getParticipantIDs(chatroom.Participants), userID.(string)) &&
@@ -147,8 +151,9 @@ func (h *ChatRoomHandler) GetByIDHandler(c *gin.Context) {
 // @Tags         chatrooms
 // @Produce      json
 // @Param        id path integer true "Chat room ID"
-// @Param        count query integer false "Number of messages to return (default 25)"
-// @Success      200 {object} utils.SuccessResponse{data=[]dtos.MessageResponse}
+// @Param        page query integer false "Page number (default 1)"
+// @Param        page_size query integer false "Number of messages per page (default 25)"
+// @Success      200 {object} utils.Pagination{data=[]dtos.MessageResponse}
 // @Failure      400 {object} utils.ErrorResponse
 // @Failure      401 {object} utils.ErrorResponse
 // @Failure      403 {object} utils.ErrorResponse
@@ -170,9 +175,44 @@ func (h *ChatRoomHandler) GetMessagesByRoomIDHandler(c *gin.Context) {
 	}
 	id := uint(idUint64)
 
-	count, err := strconv.Atoi(c.Query("count"))
+	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
-		count = 25
+		page = 1
+	}
+	if page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("page_size"))
+	if err != nil {
+		pageSize = 25
+	}
+	if pageSize <= 0 || pageSize > 100 {
+		pageSize = 25
+	}
+	offset := (page - 1) * pageSize
+
+	totalRows, err := h.messageService.GetCountByRoomID(id)
+	if err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			utils.NewErrorResponse("Failed to get message count"),
+		)
+		return
+	}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pageSize)))
+
+	if page > totalPages || totalRows == 0 {
+		pagination := utils.Pagination{
+			Page:       page,
+			PageSize:   pageSize,
+			TotalRows:  totalRows,
+			TotalPages: totalPages,
+			Data:       []dtos.MessageResponse{},
+		}
+
+		c.JSON(http.StatusOK, pagination)
+		return
 	}
 
 	chatroom, err := h.chatroomService.GetByID(id)
@@ -190,7 +230,7 @@ func (h *ChatRoomHandler) GetMessagesByRoomIDHandler(c *gin.Context) {
 		return
 	}
 
-	messages, err := h.messageService.GetMessagesByRoomID(chatroom.ID, count)
+	messages, err := h.messageService.GetMessagesByRoomID(chatroom.ID, pageSize, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.NewErrorResponse("Failed to get messages"))
 		return
@@ -205,7 +245,15 @@ func (h *ChatRoomHandler) GetMessagesByRoomIDHandler(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, utils.NewSuccessResponse(messageList))
+	pagination := utils.Pagination{
+		Page:       page,
+		PageSize:   pageSize,
+		TotalRows:  totalRows,
+		TotalPages: totalPages,
+		Data:       messageList,
+	}
+
+	c.JSON(http.StatusOK, pagination)
 }
 
 // ListChatroomsHandler godoc

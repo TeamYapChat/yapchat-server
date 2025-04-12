@@ -17,6 +17,13 @@ func (s *MessageService) CreateMessage(message *models.Message) error {
 	return s.messageRepo.Create(message)
 }
 
-func (s *MessageService) GetMessagesByRoomID(roomID uint, limit int) ([]models.Message, error) {
-	return s.messageRepo.GetByRoomID(roomID, limit)
+func (s *MessageService) GetMessagesByRoomID(
+	roomID uint,
+	limit, offset int,
+) ([]models.Message, error) {
+	return s.messageRepo.GetByRoomID(roomID, limit, offset)
+}
+
+func (s *MessageService) GetCountByRoomID(roomID uint) (int, error) {
+	return s.messageRepo.GetCountByRoomID(roomID)
 }
