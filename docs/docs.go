@@ -387,8 +387,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Number of messages to return (default 25)",
-                        "name": "count",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of messages per page (default 25)",
+                        "name": "page_size",
                         "in": "query"
                     }
                 ],
@@ -398,7 +404,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                    "$ref": "#/definitions/utils.Pagination"
                                 },
                                 {
                                     "type": "object",
@@ -697,6 +703,28 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": false
+                }
+            }
+        },
+        "utils.Pagination": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total_rows": {
+                    "type": "integer",
+                    "example": 100
                 }
             }
         },
