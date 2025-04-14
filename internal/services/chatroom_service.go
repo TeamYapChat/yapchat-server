@@ -55,6 +55,17 @@ func (s *ChatRoomService) Create(chatroomReq *dtos.ChatRoomRequest) error {
 		participants = append(participants, user)
 	}
 
+	if chatroomReq.ImageURL != "" {
+		chatroom := models.ChatRoom{
+			Name:         chatroomReq.Name,
+			Type:         chatroomReq.Type,
+			Participants: participants,
+			ImageURL:     chatroomReq.ImageURL,
+		}
+
+		return s.chatroomRepo.Create(&chatroom)
+	}
+
 	chatroom := models.ChatRoom{
 		Name:         chatroomReq.Name,
 		Type:         chatroomReq.Type,
