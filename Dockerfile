@@ -17,7 +17,10 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o server main.go
 
 # Stage 2: Final stage
-FROM --platform=$TARGETPLATFORM scratch AS final
+FROM --platform=$TARGETPLATFORM alpine:latest AS final
+
+RUN apk add --no-cache ca-certificates
+
 WORKDIR /app
 
 LABEL org.opencontainers.image.source=https://github.com/teamyapchat/yapchat-server
