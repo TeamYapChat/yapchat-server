@@ -8,7 +8,6 @@ func CORS() gin.HandlerFunc {
 			"https://yapchat.xyz":     true,
 			"https://www.yapchat.xyz": true,
 			"https://app.yapchat.xyz": true,
-			"http://localhost:5173":   true,
 		}
 
 		origin := c.Request.Header.Get("Origin")
