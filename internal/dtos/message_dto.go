@@ -3,10 +3,10 @@ package dtos
 import "time"
 
 type MessageResponse struct {
-	Content   string `json:"content"`
-	SenderID  string `json:"sender_id"`
+	Content   string `json:"content"           validate:"required"`
+	SenderID  string `json:"sender_id"         validate:"required"`
 	RoomID    uint   `json:"room_id,omitempty"`
-	Timestamp string `json:"timestamp"`
+	Timestamp string `json:"timestamp"         validate:"required"`
 }
 
 type Payload struct {

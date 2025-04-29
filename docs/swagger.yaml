@@ -15,6 +15,8 @@ definitions:
         allOf:
         - $ref: '#/definitions/models.ChatRoomType'
         example: group
+    required:
+    - type
     type: object
   dtos.ChatRoomResponse:
     properties:
@@ -30,6 +32,11 @@ definitions:
         type: array
       type:
         type: string
+    required:
+    - id
+    - name
+    - participants
+    - type
     type: object
   dtos.MessageResponse:
     properties:
@@ -41,6 +48,10 @@ definitions:
         type: string
       timestamp:
         type: string
+    required:
+    - content
+    - sender_id
+    - timestamp
     type: object
   dtos.UserResponse:
     properties:
@@ -59,6 +70,10 @@ definitions:
       username:
         example: john_doe
         type: string
+    required:
+    - id
+    - is_online
+    - username
     type: object
   models.ChatRoomType:
     enum:
@@ -76,6 +91,9 @@ definitions:
       success:
         example: false
         type: boolean
+    required:
+    - message
+    - success
     type: object
   utils.Pagination:
     properties:
@@ -92,6 +110,12 @@ definitions:
       total_rows:
         example: 100
         type: integer
+    required:
+    - data
+    - page
+    - page_size
+    - total_pages
+    - total_rows
     type: object
   utils.SuccessResponse:
     properties:
@@ -102,6 +126,9 @@ definitions:
       success:
         example: true
         type: boolean
+    required:
+    - message
+    - success
     type: object
 host: api.yapchat.xyz
 info:
@@ -116,6 +143,12 @@ paths:
   /v1/chatrooms:
     get:
       description: Get a list of all chat rooms that the user is in
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -138,6 +171,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: List all chat rooms
       tags:
       - chatrooms
@@ -146,6 +181,11 @@ paths:
       - application/json
       description: Create a new chat room
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Chat room info
         in: body
         name: request
@@ -171,6 +211,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Create a new chat room
       tags:
       - chatrooms
@@ -178,6 +220,11 @@ paths:
     get:
       description: Get chat room by ID
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Chat room ID
         in: path
         name: id
@@ -211,6 +258,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Get chat room by ID
       tags:
       - chatrooms
@@ -218,6 +267,11 @@ paths:
     get:
       description: Create and return an invite code for a chat room
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Chat room ID
         in: path
         name: id
@@ -255,6 +309,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Get an invite code for a chat room
       tags:
       - chatrooms
@@ -262,6 +318,11 @@ paths:
     post:
       description: Join chat room by ID
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Chat room ID
         in: path
         name: id
@@ -294,6 +355,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Join chat room by ID
       tags:
       - chatrooms
@@ -301,6 +364,11 @@ paths:
     post:
       description: Leave chat room by ID
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Chat room ID
         in: path
         name: id
@@ -331,6 +399,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Leave chat room by ID
       tags:
       - chatrooms
@@ -338,6 +408,11 @@ paths:
     get:
       description: Get messages for a specific chat room
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Chat room ID
         in: path
         name: id
@@ -385,6 +460,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Get messages by chat room ID
       tags:
       - chatrooms
@@ -392,6 +469,11 @@ paths:
     get:
       description: Get details of a user using their username
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Username of the user to retrieve
         in: path
         name: username
@@ -426,13 +508,19 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get user profile by username
       tags:
       - users
   /v1/users/me:
     get:
       description: Get details of the currently authenticated user
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -458,7 +546,7 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get user profile
       tags:
       - users
@@ -469,4 +557,9 @@ paths:
       summary: Handle websocket connection
       tags:
       - websocket
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

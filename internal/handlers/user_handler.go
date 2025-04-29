@@ -21,16 +21,18 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 }
 
 // GetMeHandler godoc
-// @Summary      Get user profile
-// @Description  Get details of the currently authenticated user
-// @Tags         users
-// @Security     ApiKeyAuth
-// @Produce      json
-// @Success      200  {object}  utils.SuccessResponse{data=dtos.UserResponse}
-// @Failure      401  {object}  utils.ErrorResponse
-// @Failure      404  {object}  utils.ErrorResponse
-// @Failure      500  {object}  utils.ErrorResponse
-// @Router       /v1/users/me [get]
+//
+//	@Summary		Get user profile
+//	@Description	Get details of the currently authenticated user
+//	@Tags			users
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Bearer token"
+//	@Success		200				{object}	utils.SuccessResponse{data=dtos.UserResponse}
+//	@Failure		401				{object}	utils.ErrorResponse
+//	@Failure		404				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/users/me [get]
 func (h *UserHandler) GetMeHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -59,18 +61,20 @@ func (h *UserHandler) GetMeHandler(c *gin.Context) {
 }
 
 // GetByUsernameHandler godoc
-// @Summary      Get user profile by username
-// @Description  Get details of a user using their username
-// @Tags         users
-// @Security     ApiKeyAuth
-// @Produce      json
-// @Param        username path string true "Username of the user to retrieve"
-// @Success      200  {object}  utils.SuccessResponse{data=dtos.UserResponse}
-// @Failure      400  {object}  utils.ErrorResponse
-// @Failure      401  {object}  utils.ErrorResponse
-// @Failure      404  {object}  utils.ErrorResponse
-// @Failure      500  {object}  utils.ErrorResponse
-// @Router       /v1/users/{username} [get]
+//
+//	@Summary		Get user profile by username
+//	@Description	Get details of a user using their username
+//	@Tags			users
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Bearer token"
+//	@Param			username		path		string	true	"Username of the user to retrieve"
+//	@Success		200				{object}	utils.SuccessResponse{data=dtos.UserResponse}
+//	@Failure		400				{object}	utils.ErrorResponse
+//	@Failure		401				{object}	utils.ErrorResponse
+//	@Failure		404				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/users/{username} [get]
 func (h *UserHandler) GetByUsernameHandler(c *gin.Context) {
 	username := c.Param("username")
 	if username == "" {

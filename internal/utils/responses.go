@@ -1,14 +1,14 @@
 package utils
 
 type SuccessResponse struct {
-	Success bool        `json:"success"        example:"true"`
-	Message string      `json:"message"        example:"success"`
+	Success bool        `json:"success"        validate:"required" example:"true"`
+	Message string      `json:"message"        validate:"required" example:"success"`
 	Data    interface{} `json:"data,omitempty"`
 }
 
 type ErrorResponse struct {
-	Success bool   `json:"success" example:"false"`
-	Message string `json:"message" example:"error message"`
+	Success bool   `json:"success" validate:"required" example:"false"`
+	Message string `json:"message" validate:"required" example:"error message"`
 }
 
 func NewSuccessResponse(data interface{}) SuccessResponse {
@@ -27,9 +27,9 @@ func NewErrorResponse(message string) ErrorResponse {
 }
 
 type Pagination struct {
-	Page       int `json:"page"        example:"1"`
-	PageSize   int `json:"page_size"   example:"10"`
-	TotalRows  int `json:"total_rows"  example:"100"`
-	TotalPages int `json:"total_pages" example:"10"`
-	Data       any `json:"data"`
+	Page       int `json:"page"        validate:"required" example:"1"`
+	PageSize   int `json:"page_size"   validate:"required" example:"10"`
+	TotalRows  int `json:"total_rows"  validate:"required" example:"100"`
+	TotalPages int `json:"total_pages" validate:"required" example:"10"`
+	Data       any `json:"data"        validate:"required"`
 }

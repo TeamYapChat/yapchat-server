@@ -32,17 +32,20 @@ func NewChatRoomHandler(
 }
 
 // CreateHandler godoc
-// @Summary      Create a new chat room
-// @Description  Create a new chat room
-// @Tags         chatrooms
-// @Accept       json
-// @Produce      json
-// @Param        request body dtos.ChatRoomRequest true "Chat room info"
-// @Success      201 {object} utils.SuccessResponse
-// @Failure      400 {object} utils.ErrorResponse
-// @Failure      401 {object} utils.ErrorResponse
-// @Failure      500 {object} utils.ErrorResponse
-// @Router       /v1/chatrooms [post]
+//
+//	@Summary		Create a new chat room
+//	@Description	Create a new chat room
+//	@Tags			chatrooms
+//	@Accept			json
+//	@Produce		json
+//	@Param			Authorization	header		string					true	"Bearer token"
+//	@Param			request			body		dtos.ChatRoomRequest	true	"Chat room info"
+//	@Success		201				{object}	utils.SuccessResponse
+//	@Failure		400				{object}	utils.ErrorResponse
+//	@Failure		401				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/chatrooms [post]
 func (h *ChatRoomHandler) CreateHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -72,17 +75,20 @@ func (h *ChatRoomHandler) CreateHandler(c *gin.Context) {
 }
 
 // GetByIDHandler godoc
-// @Summary      Get chat room by ID
-// @Description  Get chat room by ID
-// @Tags         chatrooms
-// @Produce      json
-// @Param        id path integer true "Chat room ID"
-// @Success      200 {object} utils.SuccessResponse{data=dtos.ChatRoomResponse}
-// @Failure      400 {object} utils.ErrorResponse
-// @Failure      401 {object} utils.ErrorResponse
-// @Failure      404 {object} utils.ErrorResponse
-// @Failure      500 {object} utils.ErrorResponse
-// @Router       /v1/chatrooms/{id} [get]
+//
+//	@Summary		Get chat room by ID
+//	@Description	Get chat room by ID
+//	@Tags			chatrooms
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Bearer token"
+//	@Param			id				path		integer	true	"Chat room ID"
+//	@Success		200				{object}	utils.SuccessResponse{data=dtos.ChatRoomResponse}
+//	@Failure		400				{object}	utils.ErrorResponse
+//	@Failure		401				{object}	utils.ErrorResponse
+//	@Failure		404				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/chatrooms/{id} [get]
 func (h *ChatRoomHandler) GetByIDHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -146,20 +152,23 @@ func (h *ChatRoomHandler) GetByIDHandler(c *gin.Context) {
 }
 
 // GetMessagesByRoomIDHandler godoc
-// @Summary      Get messages by chat room ID
-// @Description  Get messages for a specific chat room
-// @Tags         chatrooms
-// @Produce      json
-// @Param        id path integer true "Chat room ID"
-// @Param        page query integer false "Page number (default 1)"
-// @Param        page_size query integer false "Number of messages per page (default 25)"
-// @Success      200 {object} utils.Pagination{data=[]dtos.MessageResponse}
-// @Failure      400 {object} utils.ErrorResponse
-// @Failure      401 {object} utils.ErrorResponse
-// @Failure      403 {object} utils.ErrorResponse
-// @Failure      404 {object} utils.ErrorResponse
-// @Failure      500 {object} utils.ErrorResponse
-// @Router       /v1/chatrooms/{id}/messages [get]
+//
+//	@Summary		Get messages by chat room ID
+//	@Description	Get messages for a specific chat room
+//	@Tags			chatrooms
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Bearer token"
+//	@Param			id				path		integer	true	"Chat room ID"
+//	@Param			page			query		integer	false	"Page number (default 1)"
+//	@Param			page_size		query		integer	false	"Number of messages per page (default 25)"
+//	@Success		200				{object}	utils.Pagination{data=[]dtos.MessageResponse}
+//	@Failure		400				{object}	utils.ErrorResponse
+//	@Failure		401				{object}	utils.ErrorResponse
+//	@Failure		403				{object}	utils.ErrorResponse
+//	@Failure		404				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/chatrooms/{id}/messages [get]
 func (h *ChatRoomHandler) GetMessagesByRoomIDHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -257,14 +266,17 @@ func (h *ChatRoomHandler) GetMessagesByRoomIDHandler(c *gin.Context) {
 }
 
 // ListChatroomsHandler godoc
-// @Summary      List all chat rooms
-// @Description  Get a list of all chat rooms that the user is in
-// @Tags         chatrooms
-// @Produce      json
-// @Success      200 {object} utils.SuccessResponse{data=[]dtos.ChatRoomResponse}
-// @Failure      401 {object} utils.ErrorResponse
-// @Failure      500 {object} utils.ErrorResponse
-// @Router       /v1/chatrooms [get]
+//
+//	@Summary		List all chat rooms
+//	@Description	Get a list of all chat rooms that the user is in
+//	@Tags			chatrooms
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Bearer token"
+//	@Success		200				{object}	utils.SuccessResponse{data=[]dtos.ChatRoomResponse}
+//	@Failure		401				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/chatrooms [get]
 func (h *ChatRoomHandler) ListChatroomsHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -295,18 +307,21 @@ func (h *ChatRoomHandler) ListChatroomsHandler(c *gin.Context) {
 }
 
 // GetInviteCodeHandler godoc
-// @Summary      Get an invite code for a chat room
-// @Description  Create and return an invite code for a chat room
-// @Tags         chatrooms
-// @Produce      json
-// @Param        id path integer true "Chat room ID"
-// @Success      200 {object} utils.SuccessResponse{data=string}
-// @Failure      400 {object} utils.ErrorResponse
-// @Failure      401 {object} utils.ErrorResponse
-// @Failure      403 {object} utils.ErrorResponse
-// @Failure      404 {object} utils.ErrorResponse
-// @Failure      500 {object} utils.ErrorResponse
-// @Router       /v1/chatrooms/{id}/invite-code [get]
+//
+//	@Summary		Get an invite code for a chat room
+//	@Description	Create and return an invite code for a chat room
+//	@Tags			chatrooms
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Bearer token"
+//	@Param			id				path		integer	true	"Chat room ID"
+//	@Success		200				{object}	utils.SuccessResponse{data=string}
+//	@Failure		400				{object}	utils.ErrorResponse
+//	@Failure		401				{object}	utils.ErrorResponse
+//	@Failure		403				{object}	utils.ErrorResponse
+//	@Failure		404				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/chatrooms/{id}/invite-code [get]
 func (h *ChatRoomHandler) GetInviteCodeHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -350,18 +365,21 @@ func (h *ChatRoomHandler) GetInviteCodeHandler(c *gin.Context) {
 }
 
 // JoinChatroomHandler godoc
-// @Summary      Join chat room by ID
-// @Description  Join chat room by ID
-// @Tags         chatrooms
-// @Produce      json
-// @Param        id path integer true "Chat room ID"
-// @Success      200 {object} utils.SuccessResponse
-// @Failure      400 {object} utils.ErrorResponse
-// @Failure      401 {object} utils.ErrorResponse
-// @Failure      404 {object} utils.ErrorResponse
-// @Failure      409 {object} utils.ErrorResponse
-// @Failure      500 {object} utils.ErrorResponse
-// @Router       /v1/chatrooms/{id}/join [post]
+//
+//	@Summary		Join chat room by ID
+//	@Description	Join chat room by ID
+//	@Tags			chatrooms
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Bearer token"
+//	@Param			id				path		integer	true	"Chat room ID"
+//	@Success		200				{object}	utils.SuccessResponse
+//	@Failure		400				{object}	utils.ErrorResponse
+//	@Failure		401				{object}	utils.ErrorResponse
+//	@Failure		404				{object}	utils.ErrorResponse
+//	@Failure		409				{object}	utils.ErrorResponse
+//	@Failure		500				{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/chatrooms/{id}/join [post]
 func (h *ChatRoomHandler) JoinChatroomHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -418,18 +436,21 @@ func (h *ChatRoomHandler) JoinChatroomHandler(c *gin.Context) {
 }
 
 // LeaveChatroomHandler godoc
-// @Summary      Leave chat room by ID
-// @Description  Leave chat room by ID
-// @Tags         chatrooms
-// @Produce      json
-// @Param        id path integer true "Chat room ID"
-// @Success      204
-// @Failure      400 {object} utils.ErrorResponse
-// @Failure      401 {object} utils.ErrorResponse
-// @Failure      404 {object} utils.ErrorResponse
-// @Failure      409 {object} utils.ErrorResponse
-// @Failure      500 {object} utils.ErrorResponse
-// @Router       /v1/chatrooms/{id}/leave [post]
+//
+//	@Summary		Leave chat room by ID
+//	@Description	Leave chat room by ID
+//	@Tags			chatrooms
+//	@Produce		json
+//	@Param			Authorization	header	string	true	"Bearer token"
+//	@Param			id				path	integer	true	"Chat room ID"
+//	@Success		204
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		401	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		409	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Security		BearerAuth
+//	@Router			/v1/chatrooms/{id}/leave [post]
 func (h *ChatRoomHandler) LeaveChatroomHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

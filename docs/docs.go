@@ -21,6 +21,11 @@ const docTemplate = `{
     "paths": {
         "/v1/chatrooms": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a list of all chat rooms that the user is in",
                 "produces": [
                     "application/json"
@@ -29,6 +34,15 @@ const docTemplate = `{
                     "chatrooms"
                 ],
                 "summary": "List all chat rooms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -66,6 +80,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new chat room",
                 "consumes": [
                     "application/json"
@@ -78,6 +97,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create a new chat room",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Chat room info",
                         "name": "request",
@@ -118,6 +144,11 @@ const docTemplate = `{
         },
         "/v1/chatrooms/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get chat room by ID",
                 "produces": [
                     "application/json"
@@ -127,6 +158,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get chat room by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Chat room ID",
@@ -183,6 +221,11 @@ const docTemplate = `{
         },
         "/v1/chatrooms/{id}/invite-code": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create and return an invite code for a chat room",
                 "produces": [
                     "application/json"
@@ -192,6 +235,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get an invite code for a chat room",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Chat room ID",
@@ -254,6 +304,11 @@ const docTemplate = `{
         },
         "/v1/chatrooms/{id}/join": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Join chat room by ID",
                 "produces": [
                     "application/json"
@@ -263,6 +318,13 @@ const docTemplate = `{
                 ],
                 "summary": "Join chat room by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Chat room ID",
@@ -313,6 +375,11 @@ const docTemplate = `{
         },
         "/v1/chatrooms/{id}/leave": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Leave chat room by ID",
                 "produces": [
                     "application/json"
@@ -322,6 +389,13 @@ const docTemplate = `{
                 ],
                 "summary": "Leave chat room by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Chat room ID",
@@ -369,6 +443,11 @@ const docTemplate = `{
         },
         "/v1/chatrooms/{id}/messages": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get messages for a specific chat room",
                 "produces": [
                     "application/json"
@@ -378,6 +457,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get messages by chat room ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Chat room ID",
@@ -457,7 +543,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Get details of the currently authenticated user",
@@ -468,6 +554,15 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Get user profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -512,7 +607,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Get details of a user using their username",
@@ -524,6 +619,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get user profile by username",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Username of the user to retrieve",
@@ -592,6 +694,9 @@ const docTemplate = `{
     "definitions": {
         "dtos.ChatRoomRequest": {
             "type": "object",
+            "required": [
+                "type"
+            ],
             "properties": {
                 "image_url": {
                     "type": "string",
@@ -619,6 +724,12 @@ const docTemplate = `{
         },
         "dtos.ChatRoomResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "name",
+                "participants",
+                "type"
+            ],
             "properties": {
                 "id": {
                     "type": "integer"
@@ -642,6 +753,11 @@ const docTemplate = `{
         },
         "dtos.MessageResponse": {
             "type": "object",
+            "required": [
+                "content",
+                "sender_id",
+                "timestamp"
+            ],
             "properties": {
                 "content": {
                     "type": "string"
@@ -659,6 +775,11 @@ const docTemplate = `{
         },
         "dtos.UserResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "is_online",
+                "username"
+            ],
             "properties": {
                 "created_at": {
                     "type": "string",
@@ -695,6 +816,10 @@ const docTemplate = `{
         },
         "utils.ErrorResponse": {
             "type": "object",
+            "required": [
+                "message",
+                "success"
+            ],
             "properties": {
                 "message": {
                     "type": "string",
@@ -708,6 +833,13 @@ const docTemplate = `{
         },
         "utils.Pagination": {
             "type": "object",
+            "required": [
+                "data",
+                "page",
+                "page_size",
+                "total_pages",
+                "total_rows"
+            ],
             "properties": {
                 "data": {},
                 "page": {
@@ -730,6 +862,10 @@ const docTemplate = `{
         },
         "utils.SuccessResponse": {
             "type": "object",
+            "required": [
+                "message",
+                "success"
+            ],
             "properties": {
                 "data": {},
                 "message": {
@@ -741,6 +877,13 @@ const docTemplate = `{
                     "example": true
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

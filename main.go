@@ -65,14 +65,18 @@ func InitRedis(redisURL string) (*redis.Client, error) {
 	return redis.NewClient(opts), nil
 }
 
-// @title           YapChat API
-// @version         1.0
-// @description     The official API for YapChat
+// @title						YapChat API
+// @version					1.0
+// @description				The official API for YapChat
 //
-// @license.name    GPLv3
-// @license.url     https://www.gnu.org/licenses/gpl-3.0.en.html
+// @license.name				GPLv3
+// @license.url				https://www.gnu.org/licenses/gpl-3.0.en.html
 //
-// @host            api.yapchat.xyz
+// @host						api.yapchat.xyz
+//
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	cfg := config.LoadConfig()
 

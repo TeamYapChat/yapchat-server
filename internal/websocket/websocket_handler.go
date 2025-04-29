@@ -62,10 +62,11 @@ var upgrader = websocket.Upgrader{
 var mutex sync.Mutex
 
 // WebSocketHandler godoc
-// @Summary      Handle websocket connection
-// @Description  Handles websocket connections for real-time communication.
-// @Tags         websocket
-// @Router       /ws [get]
+//
+//	@Summary		Handle websocket connection
+//	@Description	Handles websocket connections for real-time communication.
+//	@Tags			websocket
+//	@Router			/ws [get]
 func (h *WSHandler) WebSocketHandler(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
