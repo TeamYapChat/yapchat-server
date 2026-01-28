@@ -5,9 +5,11 @@ import "github.com/gin-gonic/gin"
 func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		allowedOrigins := map[string]bool{
-			"https://yapchat.xyz":     true,
-			"https://www.yapchat.xyz": true,
-			"https://app.yapchat.xyz": true,
+			"https://yapchat.xyz":                 true,
+			"https://www.yapchat.xyz":             true,
+			"https://app.yapchat.xyz":             true,
+			"https://yapchat.fallenlight.xyz":     true,
+			"https://app.yapchat.fallenlight.xyz": true,
 		}
 
 		origin := c.Request.Header.Get("Origin")
